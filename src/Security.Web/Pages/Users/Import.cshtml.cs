@@ -123,7 +123,9 @@ public class ImportModel : PageModel
                     RowVersion = Guid.NewGuid().ToByteArray()
                 };
 
-                var createResult = await _userManager.CreateAsync(user, "Temp@123456!");
+                // Generate a cryptographically random initial password; user must reset on first login.
+                var tempPassword = GenerateRandomPassword();
+                var createResult = await _userManager.CreateAsync(user, tempPassword);
                 if (createResult.Succeeded)
                 {
                     await _auditService.LogAsync("User", AuditAction.Import, user.Id.ToString(),
@@ -143,5 +145,33 @@ public class ImportModel : PageModel
 
         ImportResult = result;
         return Page();
+    }
+
+    private static string GenerateRandomPassword()
+    {
+        const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lower = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+        const string all = upper + lower + digits + special;
+
+        var bytes = new byte[20];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+
+        var chars = new char[16];
+        chars[0] = upper[bytes[0] % upper.Length];
+        chars[1] = lower[bytes[1] % lower.Length];
+        chars[2] = digits[bytes[2] % digits.Length];
+        chars[3] = special[bytes[3] % special.Length];
+        for (int i = 4; i < chars.Length; i++)
+            chars[i] = all[bytes[i] % all.Length];
+
+        // Shuffle using Fisher-Yates
+        for (int i = chars.Length - 1; i > 0; i--)
+        {
+            int j = bytes[i] % (i + 1);
+            (chars[i], chars[j]) = (chars[j], chars[i]);
+        }
+        return new string(chars);
     }
 }
