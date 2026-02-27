@@ -1,0 +1,17 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head><title>Error</title><link rel="stylesheet" href="~/css/site.css" /></head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+    <div class="glass-card" style="padding:2rem;max-width:500px;text-align:center;">
+        <h1>⚠️ An Error Occurred</h1>
+        <p>Sorry, an unexpected error occurred. Please try again later.</p>
+        <a href="/Dashboard/Index" class="glass-btn glass-btn-primary">Go Home</a>
+    </div>
+</body>
+</html>

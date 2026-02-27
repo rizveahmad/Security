@@ -1,0 +1,52 @@
+@page
+@model Security.Web.Pages.Roles.IndexModel
+@{
+    ViewData["Title"] = "Roles";
+    ViewData["ActivePage"] = "Roles";
+}
+
+<div class="page-actions">
+    <a href="/Roles/Create" class="glass-btn glass-btn-primary">+ New Role</a>
+    <a href="/Roles/Export" class="glass-btn glass-btn-secondary">📤 Export</a>
+</div>
+
+<div class="glass-card mt-3">
+    <table class="glass-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model.Roles)
+            {
+                <tr>
+                    <td>@role.Name</td>
+                    <td>@role.Description</td>
+                    <td>
+                        @if (role.IsActive)
+                        {
+                            <span class="badge badge-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-danger">Inactive</span>
+                        }
+                    </td>
+                    <td>@role.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <a href="/Roles/Edit?id=@role.Id" class="glass-btn glass-btn-secondary btn-sm">Edit</a>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Roles.Any())
+            {
+                <tr><td colspan="5" class="text-center">No roles found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

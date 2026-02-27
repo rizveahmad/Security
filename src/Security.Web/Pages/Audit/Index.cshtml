@@ -1,0 +1,67 @@
+@page
+@model Security.Web.Pages.Audit.IndexModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    ViewData["ActivePage"] = "Audit";
+}
+
+<div class="glass-card">
+    <form method="get" class="filter-form">
+        <div class="filter-row">
+            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by entity or user..." />
+            <select name="action" class="form-control">
+                <option value="">All Actions</option>
+                <option value="Create" selected="@(Model.ActionFilter == "Create")">Create</option>
+                <option value="Update" selected="@(Model.ActionFilter == "Update")">Update</option>
+                <option value="Delete" selected="@(Model.ActionFilter == "Delete")">Delete</option>
+                <option value="Import" selected="@(Model.ActionFilter == "Import")">Import</option>
+            </select>
+            <button type="submit" class="glass-btn glass-btn-primary">Filter</button>
+            <a href="/Audit/Index" class="glass-btn glass-btn-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="glass-card mt-3">
+    <table class="glass-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Entity ID</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model.Logs)
+            {
+                <tr>
+                    <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@log.UserName</td>
+                    <td><span class="badge badge-@log.Action.ToString().ToLower()">@log.Action</span></td>
+                    <td>@log.EntityName</td>
+                    <td class="text-mono">@log.EntityId[..Math.Min(8, log.EntityId.Length)]...</td>
+                    <td>@log.IpAddress</td>
+                </tr>
+            }
+            @if (!Model.Logs.Any())
+            {
+                <tr><td colspan="6" class="text-center">No audit logs found.</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="pagination mt-3">
+        @if (Model.CurrentPage > 1)
+        {
+            <a href="?page=@(Model.CurrentPage - 1)&search=@Model.Search&action=@Model.ActionFilter" class="glass-btn glass-btn-secondary btn-sm">← Prev</a>
+        }
+        <span class="page-info">Page @Model.CurrentPage</span>
+        @if (Model.HasNextPage)
+        {
+            <a href="?page=@(Model.CurrentPage + 1)&search=@Model.Search&action=@Model.ActionFilter" class="glass-btn glass-btn-secondary btn-sm">Next →</a>
+        }
+    </div>
+</div>

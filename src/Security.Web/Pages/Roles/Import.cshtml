@@ -1,0 +1,58 @@
+@page
+@model Security.Web.Pages.Roles.ImportModel
+@{
+    ViewData["Title"] = "Import Roles";
+    ViewData["ActivePage"] = "Roles";
+}
+
+<div class="page-actions">
+    <a href="/Roles/Index" class="glass-btn glass-btn-secondary">← Back to Roles</a>
+</div>
+
+<div class="glass-card mt-3">
+    <h3 class="card-title">Import Roles from Excel</h3>
+    <p class="card-subtitle">Download the template, fill in role data, then upload the file.</p>
+
+    <div class="import-actions mb-3">
+        <a href="/Roles/Import?handler=DownloadTemplate" class="glass-btn glass-btn-secondary">📄 Download Template</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label class="form-label">Upload Excel File (.xlsx)</label>
+            <input type="file" name="file" accept=".xlsx" class="form-control" required />
+        </div>
+        <button type="submit" class="glass-btn glass-btn-primary">📥 Import Roles</button>
+    </form>
+
+    @if (Model.ImportResult != null)
+    {
+        <div class="import-results mt-4">
+            <div class="result-summary">
+                <span class="badge badge-success">✅ @Model.ImportResult.SuccessCount imported</span>
+                @if (Model.ImportResult.ErrorCount > 0)
+                {
+                    <span class="badge badge-danger">❌ @Model.ImportResult.ErrorCount errors</span>
+                }
+            </div>
+            @if (Model.ImportResult.HasErrors)
+            {
+                <table class="glass-table mt-3">
+                    <thead>
+                        <tr><th>Row</th><th>Field</th><th>Error</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var error in Model.ImportResult.RowErrors)
+                        {
+                            <tr class="row-error">
+                                <td>@error.RowNumber</td>
+                                <td>@error.Field</td>
+                                <td>@error.Error</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
