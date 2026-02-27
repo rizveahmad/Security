@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Security Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Security.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar placeholder -->
+        <div class="bg-dark text-white" id="sidebar-wrapper" style="min-width:220px;min-height:100vh">
+            <div class="sidebar-heading p-3 fw-bold border-bottom">
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-white text-decoration-none">
+                    &#9679; Security Admin
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white">
+                    Dashboard
+                </a>
+                <!-- Additional nav items will be added per feature module -->
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-sm navbar-light bg-light border-bottom px-3">
+                <span class="navbar-text me-auto">@ViewData["Title"]</span>
+                <partial name="_LoginPartial" />
+            </nav>
+            <div class="container-fluid p-4">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
