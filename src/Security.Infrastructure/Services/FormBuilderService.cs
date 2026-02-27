@@ -50,7 +50,7 @@ public class FormBuilderService : IFormBuilderService
     public async Task SaveSubmissionAsync(string menuKey, string recordKey, Dictionary<string, string?> values)
     {
         var def = await GetByMenuKeyAsync(menuKey)
-                  ?? throw new InvalidOperationException($"No form definition for menu '{menuKey}'");
+                  ?? throw new InvalidOperationException($"No form definition found for menu '{menuKey}'. Please create a form definition for this menu first.");
         var json = JsonSerializer.Serialize(values);
         var sub = await _db.FormSubmissions
             .FirstOrDefaultAsync(s => s.MenuKey == menuKey && s.RecordKey == recordKey);
