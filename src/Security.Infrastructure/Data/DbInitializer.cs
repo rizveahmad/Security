@@ -8,6 +8,11 @@ using Security.Infrastructure.Identity;
 namespace Security.Infrastructure.Data;
 
 /// <summary>
+/// Provides idempotent startup seeding for ASP.NET Core Identity data
+/// (default roles and the Super Admin user).
+///
+/// Call from the application startup after the hosted services have run
+/// so that the Identity schema and business tables already exist.
 /// Provides a clean seam for initial database seed logic (e.g. Super Admin bootstrap).
 /// Call from the application startup / Program.cs after migrations have been applied.
 /// </summary>
@@ -21,7 +26,10 @@ public static class DbInitializer
         try
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            await context.Database.MigrateAsync();
+
+            // EnsureCreated creates the Identity schema when no EF migrations exist.
+            // This is safe to call on every startup; it is a no-op when tables already exist.
+            await context.Database.EnsureCreatedAsync();
 
             await SeedRolesAsync(scope.ServiceProvider, logger);
             await SeedSuperAdminAsync(scope.ServiceProvider, logger);

@@ -8,6 +8,8 @@ using Security.Infrastructure.Identity;
 namespace Security.Infrastructure.Extensions;
 
 /// <summary>
+/// Registers all Infrastructure-layer services (EF Core, Identity, SqlScriptRunner, etc.)
+/// into the DI container.
 /// Registers all Infrastructure-layer services (EF Core, Identity, etc.) into the DI container.
 /// </summary>
 public static class InfrastructureServiceExtensions
@@ -38,6 +40,9 @@ public static class InfrastructureServiceExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
+
+        // Hosted service that runs pending numbered SQL scripts on startup.
+        services.AddHostedService<SqlScriptRunner>();
 
         return services;
     }
