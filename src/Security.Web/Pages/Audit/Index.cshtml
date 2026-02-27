@@ -42,7 +42,7 @@
                     <td>@log.UserName</td>
                     <td><span class="badge badge-@log.Action.ToString().ToLower()">@log.Action</span></td>
                     <td>@log.EntityName</td>
-                    <td class="text-mono">@log.EntityId[..Math.Min(8, log.EntityId.Length)]...</td>
+                    <td class="text-mono">@(string.IsNullOrEmpty(log.EntityId) ? "" : log.EntityId[..Math.Min(8, log.EntityId.Length)] + "...")</td>
                     <td>@log.IpAddress</td>
                 </tr>
             }

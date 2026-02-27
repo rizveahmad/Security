@@ -66,6 +66,17 @@ public class EditModel : PageModel
         var role = await _roleManager.FindByIdAsync(Input.Id.ToString());
         if (role is null) return NotFound();
 
+        // Optimistic concurrency: verify RowVersion has not changed since the form was loaded
+        if (!string.IsNullOrEmpty(Input.RowVersion))
+        {
+            var formRowVersion = Convert.FromBase64String(Input.RowVersion);
+            if (!role.RowVersion.SequenceEqual(formRowVersion))
+            {
+                ModelState.AddModelError(string.Empty, "The record was modified by another user. Please reload and try again.");
+                return Page();
+            }
+        }
+
         var oldValues = JsonSerializer.Serialize(new { role.Name, role.Description, role.IsActive });
 
         role.Name = Input.Name;

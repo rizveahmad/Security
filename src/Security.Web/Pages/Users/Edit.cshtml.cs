@@ -72,6 +72,17 @@ public class EditModel : PageModel
         var user = await _userManager.FindByIdAsync(Input.Id.ToString());
         if (user is null) return NotFound();
 
+        // Optimistic concurrency: verify RowVersion has not changed since the form was loaded
+        if (!string.IsNullOrEmpty(Input.RowVersion))
+        {
+            var formRowVersion = Convert.FromBase64String(Input.RowVersion);
+            if (!user.RowVersion.SequenceEqual(formRowVersion))
+            {
+                ModelState.AddModelError(string.Empty, "The record was modified by another user. Please reload and try again.");
+                return Page();
+            }
+        }
+
         var oldValues = JsonSerializer.Serialize(new { user.FirstName, user.LastName, user.IsActive });
 
         user.FirstName = Input.FirstName;

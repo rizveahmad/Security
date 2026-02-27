@@ -46,7 +46,7 @@ public class GlobalExceptionHandlerMiddleware
             };
             await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
         }
-        else
+        else if (!context.Response.HasStarted)
         {
             context.Response.Redirect("/Error");
         }
