@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Security.Application.Authorization;
+using Security.Application.Common.Interfaces;
+using Security.Infrastructure.Authorization;
 using Security.Infrastructure.Data;
 using Security.Infrastructure.Identity;
 
@@ -25,7 +29,7 @@ public static class InfrastructureServiceExtensions
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
 
-        services.AddScoped<Security.Application.Common.Interfaces.IApplicationDbContext>(
+        services.AddScoped<IApplicationDbContext>(
             provider => provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddIdentityCore<ApplicationUser>(options =>
@@ -41,6 +45,13 @@ public static class InfrastructureServiceExtensions
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
+        // Application services
+        services.AddScoped<IUserCreationService, UserCreationService>();
+        services.AddScoped<IUserQueryService, UserQueryService>();
+
+        // Dynamic permission authorization
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddSingleton<IAuthorizationHandler, DynamicPermissionHandler>();
         // Hosted service that runs pending numbered SQL scripts on startup.
         services.AddHostedService<SqlScriptRunner>();
 
