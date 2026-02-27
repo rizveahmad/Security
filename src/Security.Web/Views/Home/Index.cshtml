@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Home";
+}
+<div class="jumbotron p-5 bg-light rounded">
+    <h1 class="display-4">Security Platform</h1>
+    <p class="lead">A reusable JSON-based form builder with dynamic extension fields for core menu forms.</p>
+    <hr />
+    <p>Use the Form Builder to design extension fields, then view them in action on master forms like Customers.</p>
+    <a class="btn btn-primary me-2" asp-controller="FormBuilder" asp-action="Designer" asp-route-menuKey="customers">Design Customers Form</a>
+    <a class="btn btn-secondary" asp-controller="Customers" asp-action="Create">New Customer</a>
+</div>

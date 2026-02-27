@@ -1,0 +1,31 @@
+<div class="modal fade" id="quickInsertModal" tabindex="-1" aria-labelledby="quickInsertModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickInsertModalLabel">Quick Insert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="quickInsertBody">
+                <div class="text-center"><div class="spinner-border" role="status"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function openQuickInsert(sourceUrl, targetFieldId) {
+    fetch(sourceUrl)
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById('quickInsertBody').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('quickInsertModal')).show();
+        });
+}
+function quickInsertDone(value, text, targetFieldId) {
+    var sel = document.getElementById(targetFieldId);
+    if (sel && sel.tagName === 'SELECT') {
+        var opt = new Option(text, value, true, true);
+        sel.appendChild(opt);
+    }
+    bootstrap.Modal.getInstance(document.getElementById('quickInsertModal'))?.hide();
+}
+</script>

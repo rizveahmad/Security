@@ -1,0 +1,40 @@
+@using Security.Domain.Entities
+@{
+    ViewData["Title"] = "New Customer";
+    var extFields = ViewBag.ExtensionFields as List<FormFieldDefinition> ?? new();
+    var extValues = ViewBag.ExtensionValues as Dictionary<string, string?> ?? new();
+}
+<h2>New Customer</h2>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <fieldset class="border rounded p-3 mb-4">
+        <legend class="float-none w-auto px-2 fw-bold small text-muted">Core Fields</legend>
+        <div class="mb-3">
+            <label class="form-label">Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control @(ViewData.ModelState["name"]?.Errors.Count > 0 ? "is-invalid" : "")" required />
+            @if (ViewData.ModelState["name"]?.Errors.Count > 0)
+            {
+                <div class="invalid-feedback">@ViewData.ModelState["name"]!.Errors[0].ErrorMessage</div>
+            }
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" />
+        </div>
+    </fieldset>
+
+    @if (extFields.Count > 0)
+    {
+        <fieldset class="border rounded p-3 mb-4">
+            <legend class="float-none w-auto px-2 fw-bold small text-muted">Extension Fields</legend>
+            @{
+                ViewData["ExtValues"] = extValues;
+            }
+            @await Html.PartialAsync("_FormFields", extFields)
+        </fieldset>
+    }
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>

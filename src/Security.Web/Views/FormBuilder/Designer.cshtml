@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "Form Designer";
+    var menuKey = ViewBag.MenuKey as string ?? "";
+    var formName = ViewBag.FormName as string ?? menuKey;
+    var fieldsJson = ViewBag.FieldsJson as string ?? "[]";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h2>Form Designer — <span class="text-primary">@menuKey</span></h2>
+        <p class="text-muted">Drag fields to reorder. Configure each field with the pencil icon. Save when done.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header fw-bold">Field Types</div>
+            <div class="card-body p-2">
+                <div id="fieldPalette">
+                    @foreach (var ft in new[] { "Text","Number","Dropdown","Date","Checkbox","Textarea" })
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-1 palette-item"
+                                data-field-type="@ft">
+                            + @ft
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                <span>Canvas</span>
+                <form asp-action="Save" method="post" id="saveForm">
+                    <input type="hidden" name="menuKey" value="@menuKey" />
+                    <input type="hidden" name="name" id="hdnFormName" value="@formName" />
+                    <input type="hidden" name="fieldsJson" id="hdnFieldsJson" value="" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-sm" onclick="return prepareSave()">💾 Save</button>
+                </form>
+            </div>
+            <div class="card-body">
+                <ul id="designerCanvas" class="list-group" style="min-height:120px;">
+                </ul>
+                <div id="emptyHint" class="text-center text-muted py-4">← Click a field type to add it</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card" id="propPanel" style="display:none;">
+            <div class="card-header fw-bold">Field Properties</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label small">Label</label>
+                    <input type="text" id="propLabel" class="form-control form-control-sm" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Key (camelCase)</label>
+                    <input type="text" id="propKey" class="form-control form-control-sm" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Placeholder</label>
+                    <input type="text" id="propPlaceholder" class="form-control form-control-sm" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small">Help Text</label>
+                    <input type="text" id="propHelpText" class="form-control form-control-sm" />
+                </div>
+                <div class="mb-2 form-check">
+                    <input type="checkbox" id="propRequired" class="form-check-input" />
+                    <label class="form-check-label small" for="propRequired">Required</label>
+                </div>
+                <div id="dropdownOptionsArea" style="display:none;" class="mb-2">
+                    <label class="form-label small">Options (one per line: value|label)</label>
+                    <textarea id="propOptions" class="form-control form-control-sm" rows="4"></textarea>
+                </div>
+                <button class="btn btn-primary btn-sm w-100" onclick="applyProps()">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+let fields = @Html.Raw(fieldsJson);
+let selectedIdx = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderCanvas();
+    Sortable.create(document.getElementById('designerCanvas'), {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd(evt) {
+            const moved = fields.splice(evt.oldIndex, 1)[0];
+            fields.splice(evt.newIndex, 0, moved);
+            fields.forEach((f, i) => f.order = i);
+            renderCanvas();
+        }
+    });
+    document.querySelectorAll('.palette-item').forEach(btn => {
+        btn.addEventListener('click', () => addField(btn.dataset.fieldType));
+    });
+});
+
+function renderCanvas() {
+    const ul = document.getElementById('designerCanvas');
+    const hint = document.getElementById('emptyHint');
+    ul.innerHTML = '';
+    hint.style.display = fields.length === 0 ? '' : 'none';
+    fields.forEach((f, i) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex align-items-center gap-2' + (i === selectedIdx ? ' active' : '');
+        li.innerHTML = `
+            <span class="drag-handle" style="cursor:grab;">☰</span>
+            <span class="badge bg-secondary">${f.fieldType}</span>
+            <span class="flex-grow-1">${f.label || '(unlabelled)'}</span>
+            ${f.required ? '<span class="badge bg-danger">req</span>' : ''}
+            <button class="btn btn-sm btn-outline-primary py-0" onclick="selectField(${i})">✏️</button>
+            <button class="btn btn-sm btn-outline-danger py-0" onclick="removeField(${i})">🗑</button>
+        `;
+        ul.appendChild(li);
+    });
+}
+
+function addField(type) {
+    const key = 'field' + (fields.length + 1);
+    fields.push({
+        key, label: type + ' Field', fieldType: type,
+        required: false, placeholder: '', helpText: '',
+        order: fields.length, options: []
+    });
+    selectedIdx = fields.length - 1;
+    renderCanvas();
+    openProps(selectedIdx);
+}
+
+function selectField(idx) {
+    selectedIdx = idx;
+    renderCanvas();
+    openProps(idx);
+}
+
+function openProps(idx) {
+    const f = fields[idx];
+    document.getElementById('propLabel').value = f.label || '';
+    document.getElementById('propKey').value = f.key || '';
+    document.getElementById('propPlaceholder').value = f.placeholder || '';
+    document.getElementById('propHelpText').value = f.helpText || '';
+    document.getElementById('propRequired').checked = !!f.required;
+    const optArea = document.getElementById('dropdownOptionsArea');
+    optArea.style.display = f.fieldType === 'Dropdown' ? '' : 'none';
+    if (f.fieldType === 'Dropdown') {
+        document.getElementById('propOptions').value =
+            (f.options || []).map(o => o.value + '|' + o.text).join('\n');
+    }
+    document.getElementById('propPanel').style.display = '';
+}
+
+function applyProps() {
+    if (selectedIdx === null) return;
+    const f = fields[selectedIdx];
+    f.label = document.getElementById('propLabel').value;
+    f.key = document.getElementById('propKey').value;
+    f.placeholder = document.getElementById('propPlaceholder').value;
+    f.helpText = document.getElementById('propHelpText').value;
+    f.required = document.getElementById('propRequired').checked;
+    if (f.fieldType === 'Dropdown') {
+        const lines = document.getElementById('propOptions').value.split('\n').filter(l => l.trim());
+        f.options = lines.map(l => {
+            const parts = l.split('|');
+            return { value: parts[0]?.trim() || '', text: parts[1]?.trim() || parts[0]?.trim() || '' };
+        });
+    }
+    renderCanvas();
+}
+
+function removeField(idx) {
+    fields.splice(idx, 1);
+    fields.forEach((f, i) => f.order = i);
+    if (selectedIdx === idx) { selectedIdx = null; document.getElementById('propPanel').style.display = 'none'; }
+    renderCanvas();
+}
+
+function prepareSave() {
+    fields.forEach((f, i) => f.order = i);
+    document.getElementById('hdnFieldsJson').value = JSON.stringify(fields);
+    return true;
+}
+</script>
+}
