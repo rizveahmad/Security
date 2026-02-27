@@ -20,9 +20,29 @@
             <div class="list-group list-group-flush">
                 <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
                    class="list-group-item list-group-item-action bg-dark text-white">
-                    Dashboard
+                    📊 Dashboard
                 </a>
-                <!-- Additional nav items will be added per feature module -->
+                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">MASTER DATA</div>
+                <a asp-area="Admin" asp-controller="Company" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🏢 Companies</a>
+                <a asp-area="Admin" asp-controller="Module" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📦 Modules</a>
+                <a asp-area="Admin" asp-controller="Menu" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📋 Menus</a>
+                <a asp-area="Admin" asp-controller="PermissionType" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🔑 Permission Types</a>
+                <a asp-area="Admin" asp-controller="Workstation" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">💻 Workstations</a>
+                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">ACCESS CONTROL</div>
+                <a asp-area="Admin" asp-controller="Role" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🛡️ Roles</a>
+                <a asp-area="Admin" asp-controller="RoleGroup" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">👥 Role Groups</a>
+                <a asp-area="Admin" asp-controller="User" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">👤 Users</a>
+                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">AUDIT</div>
+                <a asp-area="Admin" asp-controller="Audit" asp-action="Index"
+                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📝 Audit Log</a>
             </div>
         </div>
 

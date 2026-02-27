@@ -1,0 +1,93 @@
+@using Security.Application.Features.Roles.Commands
+@using Security.Application.Features.Roles.Queries
+@model CreateRoleCommand
+@{
+    ViewData["Title"] = "Create Role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var permissionTree = ViewBag.PermissionTree as List<PermissionTreeModuleDto> ?? new List<PermissionTreeModuleDto>();
+}
+<div class="row justify-content-center"><div class="col-md-8">
+<h4>Create Role</h4>
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+    <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Code" class="form-label"></label><input asp-for="Code" class="form-control" /><span asp-validation-for="Code" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="2"></textarea></div>
+    <div class="mb-3">
+        <label asp-for="CompanyId" class="form-label">Company</label>
+        <select asp-for="CompanyId" asp-items="@((List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Companies)" class="form-select" id="companySelect">
+            <option value="0">-- Select Company --</option>
+        </select>
+        <span asp-validation-for="CompanyId" class="text-danger"></span>
+    </div>
+    <div class="mb-3 form-check"><input asp-for="IsActive" class="form-check-input" type="checkbox" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+
+    <div class="mb-3" id="permissionTreeContainer">
+        <label class="form-label fw-bold">Permissions</label>
+        @if (permissionTree.Any())
+        {
+            @foreach (var module in permissionTree)
+            {
+                <div class="card mb-2">
+                    <div class="card-header fw-semibold">@module.Name</div>
+                    <div class="card-body">
+                        @foreach (var menu in module.Menus)
+                        {
+                            <div class="mb-2">
+                                <div class="fw-semibold text-muted small">@menu.Name</div>
+                                <div class="d-flex flex-wrap gap-3 ps-2">
+                                    @foreach (var pt in menu.Permissions)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="permissionTypeIds" value="@pt.Id" id="pt_@pt.Id" />
+                                            <label class="form-check-label" for="pt_@pt.Id">@pt.Name</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted small" id="noPermissionsMsg">Select a company to load permissions.</p>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        document.getElementById('companySelect').addEventListener('change', function () {
+            const companyId = this.value;
+            if (!companyId || companyId === '0') {
+                document.getElementById('permissionTreeContainer').innerHTML = '<label class="form-label fw-bold">Permissions</label><p class="text-muted small">Select a company to load permissions.</p>';
+                return;
+            }
+            fetch(`/Admin/Role/GetPermissionTree?companyId=${companyId}`)
+                .then(r => r.json())
+                .then(tree => {
+                    let html = '<label class="form-label fw-bold">Permissions</label>';
+                    if (!tree.length) { html += '<p class="text-muted small">No permissions defined for this company.</p>'; }
+                    tree.forEach(mod => {
+                        html += `<div class="card mb-2"><div class="card-header fw-semibold">${mod.name}</div><div class="card-body">`;
+                        mod.menus.forEach(menu => {
+                            html += `<div class="mb-2"><div class="fw-semibold text-muted small">${menu.name}</div><div class="d-flex flex-wrap gap-3 ps-2">`;
+                            menu.permissions.forEach(pt => {
+                                html += `<div class="form-check"><input class="form-check-input" type="checkbox" name="permissionTypeIds" value="${pt.id}" id="pt_${pt.id}"><label class="form-check-label" for="pt_${pt.id}">${pt.name}</label></div>`;
+                            });
+                            html += '</div></div>';
+                        });
+                        html += '</div></div>';
+                    });
+                    document.getElementById('permissionTreeContainer').innerHTML = html;
+                });
+        });
+    </script>
+}

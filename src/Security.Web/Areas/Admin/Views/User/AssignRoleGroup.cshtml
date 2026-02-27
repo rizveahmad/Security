@@ -1,0 +1,23 @@
+@using Security.Web.Models.Admin
+@model AssignRoleGroupViewModel
+@{
+    ViewData["Title"] = "Assign Role Group";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="row justify-content-center"><div class="col-md-6">
+<h4>Assign Role Group</h4>
+<form asp-action="AssignRoleGroup" method="post">
+    <input asp-for="UserId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+    <div class="mb-3">
+        <label asp-for="RoleGroupId" class="form-label"></label>
+        <select asp-for="RoleGroupId" asp-items="@((List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.RoleGroups)" class="form-select">
+            <option value="0">-- Select Role Group --</option>
+        </select>
+        <span asp-validation-for="RoleGroupId" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Assign</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }
