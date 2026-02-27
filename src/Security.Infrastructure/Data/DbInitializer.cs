@@ -13,6 +13,8 @@ namespace Security.Infrastructure.Data;
 ///
 /// Call from the application startup after the hosted services have run
 /// so that the Identity schema and business tables already exist.
+/// Provides a clean seam for initial database seed logic (e.g. Super Admin bootstrap).
+/// Call from the application startup / Program.cs after migrations have been applied.
 /// </summary>
 public static class DbInitializer
 {

@@ -29,18 +29,15 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Run Identity schema creation and Super Admin seed after hosted services (SqlScriptRunner).
-// DbInitializer.SeedAsync uses EnsureCreatedAsync which is idempotent.
-try
+// Seed the database (roles + super admin placeholder)
+if (app.Environment.IsDevelopment())
 {
-    await DbInitializer.SeedAsync(app.Services);
-}
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex,
-        "Database seeding failed – ensure a SQL Server connection string and " +
-        "Seed:SuperAdminPassword are configured.");
+    try { await DbInitializer.SeedAsync(app.Services); }
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
+    }
 }
 
 if (!app.Environment.IsDevelopment())
