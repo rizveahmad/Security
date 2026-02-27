@@ -17,7 +17,11 @@ public class FormBuilderController : Controller
         ViewBag.MenuKey = menuKey;
         var def = await _svc.GetByMenuKeyAsync(menuKey);
         ViewBag.FormName = def?.Name ?? menuKey;
-        ViewBag.FieldsJson = def?.FieldsJson ?? "[]";
+        // Re-serialize through System.Text.Json so < > & are escaped as \u003C \u003E \u0026
+        // preventing HTML/script-injection when the value is embedded in a <script> block.
+        var rawJson = def?.FieldsJson ?? "[]";
+        var parsed = JsonSerializer.Deserialize<JsonElement>(rawJson);
+        ViewBag.FieldsJson = JsonSerializer.Serialize(parsed);
         return View();
     }
 
