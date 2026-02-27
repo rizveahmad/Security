@@ -12,6 +12,8 @@ using Security.Infrastructure.Identity;
 namespace Security.Infrastructure.Extensions;
 
 /// <summary>
+/// Registers all Infrastructure-layer services (EF Core, Identity, SqlScriptRunner, etc.)
+/// into the DI container.
 /// Registers all Infrastructure-layer services (EF Core, Identity, etc.) into the DI container.
 /// </summary>
 public static class InfrastructureServiceExtensions
@@ -50,6 +52,8 @@ public static class InfrastructureServiceExtensions
         // Dynamic permission authorization
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddSingleton<IAuthorizationHandler, DynamicPermissionHandler>();
+        // Hosted service that runs pending numbered SQL scripts on startup.
+        services.AddHostedService<SqlScriptRunner>();
 
         return services;
     }
