@@ -8,6 +8,7 @@ namespace Security.Web.Controllers;
 
 public class AccountController(
     SignInManager<ApplicationUser> signInManager,
+    UserManager<ApplicationUser> userManager,
     ILogger<AccountController> logger) : Controller
 {
     [HttpGet]
@@ -37,18 +38,27 @@ public class AccountController(
         if (!ModelState.IsValid)
             return View(model);
 
+        var userName = model.Identifier;
+        var atIndex = model.Identifier.IndexOf('@');
+        if (atIndex > 0 && atIndex < model.Identifier.Length - 1)
+        {
+            var user = await userManager.FindByEmailAsync(model.Identifier);
+            if (user != null)
+                userName = user.UserName!;
+        }
+
         var result = await signInManager.PasswordSignInAsync(
-            model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
+            userName, model.Password, model.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
-            logger.LogInformation("User {Email} logged in.", model.Email);
+            logger.LogInformation("User {Identifier} logged in.", model.Identifier);
             return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? Url.Action("Index", "Home")! : returnUrl);
         }
 
         if (result.IsLockedOut)
         {
-            logger.LogWarning("User {Email} account locked out.", model.Email);
+            logger.LogWarning("User {Identifier} account locked out.", model.Identifier);
             ModelState.AddModelError(string.Empty, "Account locked out. Please try again later.");
             return View(model);
         }

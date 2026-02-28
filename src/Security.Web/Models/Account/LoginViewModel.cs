@@ -5,9 +5,8 @@ namespace Security.Web.Models.Account;
 public class LoginViewModel
 {
     [Required]
-    [EmailAddress]
-    [Display(Name = "Email")]
-    public string Email { get; set; } = string.Empty;
+    [Display(Name = "Username or Email")]
+    public string Identifier { get; set; } = string.Empty;
 
     [Required]
     [DataType(DataType.Password)]
