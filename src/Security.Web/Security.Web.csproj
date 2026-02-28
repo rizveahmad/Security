@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0-preview.1.25120.3" />
     <ProjectReference Include="..\Security.Application\Security.Application.csproj" />
     <ProjectReference Include="..\Security.Infrastructure\Security.Infrastructure.csproj" />
   </ItemGroup>
@@ -17,9 +18,7 @@
     <ItemGroup>
       <_SqlScripts Include="$(MSBuildThisFileDirectory)..\..\scripts\*.sql" />
     </ItemGroup>
-    <Copy SourceFiles="@(_SqlScripts)"
-          DestinationFolder="$(OutputPath)scripts\"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_SqlScripts)" DestinationFolder="$(OutputPath)scripts\" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

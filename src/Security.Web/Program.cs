@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Security.Application;
 using Security.Infrastructure.Data;
 using Security.Infrastructure.Extensions;
@@ -37,6 +40,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.Name = "Security.Auth";
 });
+
+// JWT Bearer authentication for API endpoints.
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"]
+    ?? throw new InvalidOperationException("JWT Key is not configured in 'Jwt:Key'.");
+if (jwtKey.Length < 32)
+    throw new InvalidOperationException("'Jwt:Key' must be at least 32 characters for HMAC-SHA256.");
+builder.Services.AddAuthentication()
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSection["Issuer"] ?? "SecurityApp",
+            ValidateAudience = true,
+            ValidAudience = jwtSection["Audience"] ?? "SecurityApi",
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+        };
+    });
 
 builder.Services.AddSession(options =>
 {
@@ -81,6 +106,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+// API routes (attribute-routed controllers under /api)
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "areas",
