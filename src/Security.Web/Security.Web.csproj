@@ -4,8 +4,28 @@
     <ProjectReference Include="..\Security.Infrastructure\Security.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+    <ProjectReference Include="..\Security.Application\Security.Application.csproj" />
+    <ProjectReference Include="..\Security.Infrastructure\Security.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Copy top-level SQL scripts into the output so the hosted script runner can find them. -->
+  <Target Name="CopySqlScripts" AfterTargets="Build">
+    <ItemGroup>
+      <_SqlScripts Include="$(MSBuildThisFileDirectory)..\..\scripts\sql\*.sql" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SqlScripts)"
+          DestinationFolder="$(OutputPath)scripts\sql\"
+          SkipUnchangedFiles="true" />
+  </Target>
+
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>

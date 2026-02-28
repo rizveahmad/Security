@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Home";
+}
+<div class="jumbotron p-5 bg-light rounded">
+    <h1 class="display-4">Security Platform</h1>
+    <p class="lead">A reusable JSON-based form builder with dynamic extension fields for core menu forms.</p>
+    <hr />
+    <p>Use the Form Builder to design extension fields, then view them in action on master forms like Customers.</p>
+    <a class="btn btn-primary me-2" asp-controller="FormBuilder" asp-action="Designer" asp-route-menuKey="customers">Design Customers Form</a>
+    <a class="btn btn-secondary" asp-controller="Customers" asp-action="Create">New Customer</a>
+
+<div class="text-center py-5">
+    <h1 class="display-5 fw-bold">Security Platform</h1>
+    <p class="lead text-muted mt-3">A production-ready .NET 10 Clean Architecture baseline.</p>
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg mt-3">Get Started</a>
+    }
+    else
+    {
+        <p class="mt-3">Welcome back, <strong>@(User.Identity?.Name ?? "User")</strong>!</p>
+        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+        {
+            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-success btn-lg mt-2">Go to Admin</a>
+        }
+    }
+</div>

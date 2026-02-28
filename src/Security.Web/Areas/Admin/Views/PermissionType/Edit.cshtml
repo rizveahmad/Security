@@ -1,0 +1,26 @@
+@using Security.Application.Features.PermissionTypes.Commands
+@model UpdatePermissionTypeCommand
+@{
+    ViewData["Title"] = "Edit Permission Type";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="row justify-content-center"><div class="col-md-6">
+<h4>Edit Permission Type</h4>
+<form asp-action="Edit" method="post">
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+    <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Code" class="form-label"></label><input asp-for="Code" class="form-control" /></div>
+    <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="2"></textarea></div>
+    <div class="mb-3">
+        <label asp-for="MenuId" class="form-label">Menu</label>
+        <select asp-for="MenuId" asp-items="@((List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Menus)" class="form-select">
+            <option value="0">-- Select Menu --</option>
+        </select>
+    </div>
+    <div class="mb-3 form-check"><input asp-for="IsActive" class="form-check-input" type="checkbox" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }
