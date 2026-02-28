@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Security.Application.Common.Interfaces;
+using Security.Application.Interfaces;
 using Security.Domain.Common;
 using Security.Domain.Entities;
 using ApplicationUser = Security.Infrastructure.Identity.ApplicationUser;
@@ -10,9 +11,15 @@ namespace Security.Infrastructure.Data;
 /// <summary>
 /// Main EF Core database context wiring Identity and application entities.
 /// </summary>
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ITenantContext? tenantContext = null)
     : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
+    /// <summary>
+    /// Active tenant identifier evaluated per-instance at query time.
+    /// Null means no tenant filter is applied (SuperAdmin viewing all tenants).
+    /// </summary>
+    private int? ActiveTenantId => tenantContext?.TenantId;
+
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<AppModule> AppModules => Set<AppModule>();
     public DbSet<AppMenu> AppMenus => Set<AppMenu>();
@@ -39,16 +46,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         });
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-        // Global soft-delete query filters for all AuditableEntity-derived types
+        // Global soft-delete query filters for all AuditableEntity-derived types.
+        // Tenant-scoped entities (those with a direct CompanyId) additionally enforce
+        // tenant isolation: records are only visible when their CompanyId matches the
+        // active tenant, unless no tenant is selected (ActiveTenantId == null) which
+        // allows SuperAdmin to view records across all tenants.
         builder.Entity<Company>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<AppModule>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<AppModule>().HasQueryFilter(e => !e.IsDeleted
+            && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
         builder.Entity<AppMenu>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<PermissionType>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<AppRole>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<AppRole>().HasQueryFilter(e => !e.IsDeleted
+            && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
         builder.Entity<RolePermission>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<RoleGroup>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<RoleGroup>().HasQueryFilter(e => !e.IsDeleted
+            && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
         builder.Entity<RoleGroupRole>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<UserRoleGroup>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<Workstation>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<Workstation>().HasQueryFilter(e => !e.IsDeleted
+            && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
     }
 }

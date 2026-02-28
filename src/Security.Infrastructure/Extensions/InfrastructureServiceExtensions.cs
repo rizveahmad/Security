@@ -59,6 +59,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped(typeof(IExportService<>), typeof(ExcelExportService<>));
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ITenantContext, TenantContext>();
         services.AddHttpContextAccessor();
 
         // Dynamic permission authorization

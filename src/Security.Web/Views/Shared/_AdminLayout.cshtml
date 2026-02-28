@@ -15,7 +15,7 @@
             <span class="brand-text">Security Admin</span>
         </a>
         <div class="d-flex align-items-center gap-3">
-            <span class="user-name">@ViewData["Title"]</span>
+            @await Component.InvokeAsync("TenantSelector")
             <partial name="_LoginPartial" />
         </div>
     </header>
