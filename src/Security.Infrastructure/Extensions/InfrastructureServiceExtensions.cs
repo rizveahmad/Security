@@ -63,6 +63,8 @@ public static class InfrastructureServiceExtensions
         services.AddHttpContextAccessor();
 
         // Dynamic permission authorization
+        services.AddMemoryCache();
+        services.AddSingleton<IPermissionCache, InMemoryPermissionCache>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddSingleton<IAuthorizationHandler, DynamicPermissionHandler>();
 
