@@ -1,0 +1,62 @@
+@page
+@model Security.Web.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["ActivePage"] = "Dashboard";
+}
+
+<div class="stats-grid">
+    <div class="glass-card stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalUsers</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.ActiveUsers</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalRoles</div>
+            <div class="stat-label">Total Roles</div>
+        </div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.RecentAuditCount</div>
+            <div class="stat-label">Recent Audits</div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card mt-4">
+    <h3 class="card-title">Recent Audit Activity</h3>
+    <table class="glass-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model.RecentAuditLogs)
+            {
+                <tr>
+                    <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@log.UserName</td>
+                    <td><span class="badge badge-@log.Action.ToString().ToLower()">@log.Action</span></td>
+                    <td>@log.EntityName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
