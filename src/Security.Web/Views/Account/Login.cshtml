@@ -23,9 +23,9 @@
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
             <div class="form-group">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="username" placeholder="name@company.com" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <label asp-for="Identifier" class="form-label"></label>
+                <input asp-for="Identifier" class="form-control" autocomplete="username" placeholder="username or email" />
+                <span asp-validation-for="Identifier" class="text-danger"></span>
             </div>
 
             <div class="form-group">
