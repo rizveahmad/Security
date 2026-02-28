@@ -14,7 +14,6 @@ namespace Security.Infrastructure.Extensions;
 /// <summary>
 /// Registers all Infrastructure-layer services (EF Core, Identity, SqlScriptRunner, etc.)
 /// into the DI container.
-/// Registers all Infrastructure-layer services (EF Core, Identity, etc.) into the DI container.
 /// </summary>
 public static class InfrastructureServiceExtensions
 {
