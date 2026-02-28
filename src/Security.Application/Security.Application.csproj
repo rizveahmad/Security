@@ -10,7 +10,19 @@
   <ItemGroup>
     <ProjectReference Include="..\Security.Domain\Security.Domain.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.0-preview.1.25120.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-preview.1.25081.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0-preview.1.25080.5" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
 </Project>

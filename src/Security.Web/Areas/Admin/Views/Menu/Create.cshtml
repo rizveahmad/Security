@@ -1,0 +1,28 @@
+@using Security.Application.Features.Menus.Commands
+@model CreateMenuCommand
+@{
+    ViewData["Title"] = "Create Menu";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="row justify-content-center"><div class="col-md-6">
+<h4>Create Menu</h4>
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+    <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Code" class="form-label"></label><input asp-for="Code" class="form-control" /></div>
+    <div class="mb-3"><label asp-for="Url" class="form-label"></label><input asp-for="Url" class="form-control" /></div>
+    <div class="mb-3"><label asp-for="Icon" class="form-label"></label><input asp-for="Icon" class="form-control" /></div>
+    <div class="mb-3"><label asp-for="DisplayOrder" class="form-label"></label><input asp-for="DisplayOrder" class="form-control" type="number" /></div>
+    <div class="mb-3">
+        <label asp-for="ModuleId" class="form-label">Module</label>
+        <select asp-for="ModuleId" asp-items="@((List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Modules)" class="form-select">
+            <option value="0">-- Select Module --</option>
+        </select>
+        <span asp-validation-for="ModuleId" class="text-danger"></span>
+    </div>
+    <div class="mb-3 form-check"><input asp-for="IsActive" class="form-check-input" type="checkbox" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }

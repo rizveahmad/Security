@@ -5,4 +5,7 @@
     <Project Path="src/Security.Infrastructure/Security.Infrastructure.csproj" />
     <Project Path="src/Security.Web/Security.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Security.Application.Tests/Security.Application.Tests.csproj" />
+  </Folder>
 </Solution>
