@@ -1,48 +1,3 @@
-using Security.Infrastructure.Data;
-using Security.Infrastructure.Extensions;
-using Security.Web.Middleware;
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-    options.Conventions.AllowAnonymousToPage("/Account/Login");
-});
-
-builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.AddProblemDetails();
-
-builder.Services.AddAntiforgery(options =>
-{
-    options.HeaderName = "X-XSRF-TOKEN";
-});
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
-else
-{
-    app.UseDeveloperExceptionPage();
-}
-
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapRazorPages();
-app.MapGet("/", context => { context.Response.Redirect("/Dashboard/Index"); return Task.CompletedTask; });
-
-await DbInitializer.InitializeAsync(app.Services);
-
-app.Run();
 using Security.Application;
 using Security.Infrastructure.Data;
 using Security.Infrastructure.Extensions;
@@ -75,14 +30,11 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Seed the database (roles + super admin placeholder)
-if (app.Environment.IsDevelopment())
+try { await DbInitializer.SeedAsync(app.Services); }
+catch (Exception ex)
 {
-    try { await DbInitializer.SeedAsync(app.Services); }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
-    }
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
 }
 
 if (!app.Environment.IsDevelopment())
@@ -107,7 +59,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
-await DbInitializer.SeedAsync(app.Services);
 
 app.Run();

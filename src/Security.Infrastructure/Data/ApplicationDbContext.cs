@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Security.Application.Common.Interfaces;
 using Security.Domain.Common;
 using Security.Domain.Entities;
-using Security.Infrastructure.Identity;
+using ApplicationUser = Security.Infrastructure.Identity.ApplicationUser;
 
 namespace Security.Infrastructure.Data;
 
@@ -28,19 +28,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
-        builder.Entity<User>(e =>
-        {
-            e.Property(u => u.RowVersion).IsConcurrencyToken();
-            e.Property(u => u.FirstName).HasMaxLength(100);
-            e.Property(u => u.LastName).HasMaxLength(100);
-        });
-
-        builder.Entity<Role>(e =>
-        {
-            e.Property(r => r.RowVersion).IsConcurrencyToken();
-            e.Property(r => r.Description).HasMaxLength(500);
-        });
 
         builder.Entity<AuditLog>(e =>
         {

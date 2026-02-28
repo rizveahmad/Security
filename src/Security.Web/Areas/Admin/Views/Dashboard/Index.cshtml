@@ -5,30 +5,37 @@
 
 <div class="row g-4">
     <div class="col-12">
-        <h4 class="mb-3">Welcome to the Admin Dashboard</h4>
-        <p class="text-muted">This is the premium admin shell placeholder. Feature modules will be added here.</p>
+        <h4 class="mb-3">Welcome to Security Admin</h4>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-primary">
             <div class="card-body">
                 <h5 class="card-title">Users</h5>
-                <p class="card-text display-6">--</p>
+                <p class="card-text display-6">@ViewBag.TotalUsers</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-success">
             <div class="card-body">
                 <h5 class="card-title">Roles</h5>
-                <p class="card-text display-6">--</p>
+                <p class="card-text display-6">@ViewBag.TotalRoles</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-info">
             <div class="card-body">
-                <h5 class="card-title">Sessions</h5>
-                <p class="card-text display-6">--</p>
+                <h5 class="card-title">Companies</h5>
+                <p class="card-text display-6">@ViewBag.TotalCompanies</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Audits (7d)</h5>
+                <p class="card-text display-6">@ViewBag.RecentAuditCount</p>
             </div>
         </div>
     </div>

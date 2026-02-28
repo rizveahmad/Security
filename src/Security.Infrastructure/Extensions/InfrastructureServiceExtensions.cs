@@ -5,16 +5,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Security.Application.Authorization;
 using Security.Application.Common.Interfaces;
+using Security.Application.Interfaces;
 using Security.Infrastructure.Authorization;
 using Security.Infrastructure.Data;
 using Security.Infrastructure.Identity;
+using Security.Infrastructure.Services;
 
 namespace Security.Infrastructure.Extensions;
 
 /// <summary>
 /// Registers all Infrastructure-layer services (EF Core, Identity, SqlScriptRunner, etc.)
 /// into the DI container.
-/// Registers all Infrastructure-layer services (EF Core, Identity, etc.) into the DI container.
 /// </summary>
 public static class InfrastructureServiceExtensions
 {
@@ -48,6 +49,10 @@ public static class InfrastructureServiceExtensions
         // Application services
         services.AddScoped<IUserCreationService, UserCreationService>();
         services.AddScoped<IUserQueryService, UserQueryService>();
+        services.AddScoped(typeof(IExportService<>), typeof(ExcelExportService<>));
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddHttpContextAccessor();
 
         // Dynamic permission authorization
         services.AddScoped<IPermissionService, PermissionService>();
