@@ -5,11 +5,11 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <form asp-controller="Account" asp-action="Logout" method="post" class="d-flex align-items-center gap-2">
-        <span class="text-dark navbar-text">Hello, @(User.Identity?.Name ?? "User")!</span>
-        <button type="submit" class="btn btn-sm btn-outline-secondary">Logout</button>
+        <span class="user-name">@(User.Identity?.Name ?? "User")</span>
+        <button type="submit" class="glass-btn glass-btn-secondary btn-sm">Logout</button>
     </form>
 }
 else
 {
-    <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-primary">Login</a>
+    <a asp-controller="Account" asp-action="Login" class="glass-btn glass-btn-primary btn-sm">Login</a>
 }

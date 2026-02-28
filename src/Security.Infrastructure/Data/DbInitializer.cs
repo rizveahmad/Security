@@ -84,10 +84,12 @@ public static class DbInitializer
 
             // Password is read from configuration (Seed:SuperAdminPassword).
             // Set this via user-secrets, environment variables, or Azure Key Vault – never hard-code in source.
-            var password = configuration["Seed:SuperAdminPassword"]
-                ?? throw new InvalidOperationException(
-                    "Seed:SuperAdminPassword configuration value is required. " +
-                    "Set it via user-secrets, environment variable, or secure configuration.");
+            var password = configuration["Seed:SuperAdminPassword"];
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                logger.LogWarning("Skipping Super Admin seed because Seed:SuperAdminPassword is not configured.");
+                return;
+            }
 
             var result = await userManager.CreateAsync(superAdmin, password);
             if (result.Succeeded)
