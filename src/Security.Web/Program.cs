@@ -37,12 +37,19 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Seed the database (roles + super admin placeholder)
-try { await DbInitializer.SeedAsync(app.Services); }
+// Deterministic startup: create DB → run scripts → seed roles + SuperAdmin.
+// Must run before app.Run() so the schema is ready before the first request.
+try
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var bootstrapper = scope.ServiceProvider.GetRequiredService<IDatabaseBootstrapper>();
+    await bootstrapper.InitializeAsync();
+}
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
+    logger.LogError(ex, "Database initialisation failed – ensure a SQL Server connection string is configured.");
+    throw;
 }
 
 if (!app.Environment.IsDevelopment())

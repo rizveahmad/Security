@@ -63,8 +63,10 @@ public static class InfrastructureServiceExtensions
         // Dynamic permission authorization
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddSingleton<IAuthorizationHandler, DynamicPermissionHandler>();
-        // Hosted service that runs pending numbered SQL scripts on startup.
-        services.AddHostedService<SqlScriptRunner>();
+
+        // Database bootstrap: script runner + deterministic startup initializer.
+        services.AddScoped<IDatabaseScriptRunner, SqlScriptRunner>();
+        services.AddScoped<IDatabaseBootstrapper, DatabaseBootstrapper>();
 
         return services;
     }

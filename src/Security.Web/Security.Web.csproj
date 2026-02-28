@@ -12,13 +12,13 @@
     <ProjectReference Include="..\Security.Infrastructure\Security.Infrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Copy top-level SQL scripts into the output so the hosted script runner can find them. -->
+  <!-- Copy top-level SQL scripts into the output so the script runner can find them. -->
   <Target Name="CopySqlScripts" AfterTargets="Build">
     <ItemGroup>
-      <_SqlScripts Include="$(MSBuildThisFileDirectory)..\..\scripts\sql\*.sql" />
+      <_SqlScripts Include="$(MSBuildThisFileDirectory)..\..\scripts\*.sql" />
     </ItemGroup>
     <Copy SourceFiles="@(_SqlScripts)"
-          DestinationFolder="$(OutputPath)scripts\sql\"
+          DestinationFolder="$(OutputPath)scripts\"
           SkipUnchangedFiles="true" />
   </Target>
 

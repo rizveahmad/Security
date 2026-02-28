@@ -8,15 +8,13 @@ using Microsoft.Extensions.Logging;
 namespace Security.Infrastructure.Data;
 
 /// <summary>
-/// Hosted service that runs numbered SQL scripts from the configured folder on application startup.
-/// Scripts are executed in lexical (numeric-prefix) order and skipped if already recorded in
-/// <c>dbo.ScriptExecutionHistory</c>.  This is idempotent and production-safe: no tables are
-/// dropped, no existing data is touched.
+/// Runs numbered SQL scripts from the configured folder in lexical order, skipping any already
+/// recorded in <c>dbo.ScriptExecutionHistory</c>.  Idempotent and production-safe.
 ///
-/// To add a new migration script, place a file named <c>NNNN_description.sql</c> in the
-/// scripts folder (default: <c>scripts/sql</c> relative to the application root).
+/// To add a new migration, place a file named <c>NNNN_description.sql</c> in the scripts
+/// folder (default: <c>scripts</c> relative to the application content root).
 /// </summary>
-public sealed class SqlScriptRunner : IHostedService
+public sealed class SqlScriptRunner : IDatabaseScriptRunner
 {
     private readonly string _connectionString;
     private readonly string _scriptFolder;
@@ -33,16 +31,16 @@ public sealed class SqlScriptRunner : IHostedService
             ?? throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-        // Allow override via config; fall back to <ContentRoot>/scripts/sql.
+        // Allow override via config; fall back to <ContentRoot>/scripts.
         var configuredFolder = configuration["ScriptRunner:ScriptFolder"];
         _scriptFolder = string.IsNullOrWhiteSpace(configuredFolder)
-            ? Path.Combine(hostEnvironment.ContentRootPath, "scripts", "sql")
+            ? Path.Combine(hostEnvironment.ContentRootPath, "scripts")
             : Path.IsPathRooted(configuredFolder)
                 ? configuredFolder
                 : Path.Combine(hostEnvironment.ContentRootPath, configuredFolder);
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("SqlScriptRunner starting. Script folder: {Folder}", _scriptFolder);
 
@@ -73,8 +71,6 @@ public sealed class SqlScriptRunner : IHostedService
             await RunScriptAsync(connection, scriptPath, fileName, cancellationToken);
         }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     // -----------------------------------------------------------------------
     // Private helpers
