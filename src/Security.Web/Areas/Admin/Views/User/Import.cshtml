@@ -1,0 +1,65 @@
+@using Security.Application.Models
+@model ImportResult?
+@{
+    ViewData["Title"] = "Import Users";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Import Users</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Back to Users</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-muted">Step 1: Download the template</h6>
+        <a asp-action="DownloadUserTemplate" class="btn btn-outline-primary btn-sm">📄 Download Template (.xlsx)</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-subtitle mb-3 text-muted">Step 2: Upload filled template</h6>
+        <form asp-action="Import" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+            <div class="mb-3">
+                <label class="form-label">Excel File (.xlsx) <span class="text-danger">*</span></label>
+                <input type="file" name="file" accept=".xlsx" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">📥 Import Users</button>
+        </form>
+    </div>
+</div>
+
+@if (Model is not null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h6 class="card-subtitle mb-3 text-muted">Import Results</h6>
+            <p>
+                <span class="badge bg-success me-2">✅ @Model.SuccessCount imported</span>
+                @if (Model.ErrorCount > 0)
+                {
+                    <span class="badge bg-danger">❌ @Model.ErrorCount errors</span>
+                }
+            </p>
+            @if (Model.HasErrors)
+            {
+                <table class="table table-sm table-bordered mt-3">
+                    <thead class="table-warning">
+                        <tr><th>Row</th><th>Field</th><th>Error</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var err in Model.RowErrors)
+                        {
+                            <tr>
+                                <td>@err.RowNumber</td>
+                                <td>@err.Field</td>
+                                <td>@err.Error</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}

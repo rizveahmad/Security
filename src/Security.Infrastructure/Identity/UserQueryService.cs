@@ -8,7 +8,7 @@ namespace Security.Infrastructure.Identity;
 
 public class UserQueryService(ApplicationDbContext context) : IUserQueryService
 {
-    public async Task<PaginatedList<UserDto>> GetUsersAsync(int pageNumber, int pageSize, string? search, CancellationToken ct = default)
+    public async Task<PaginatedList<UserDto>> GetUsersAsync(int pageNumber, int pageSize, string? search, bool? isActive = null, CancellationToken ct = default)
     {
         var query = from u in context.Users.AsNoTracking()
                     join urg in context.UserRoleGroups.AsNoTracking() on u.Id equals urg.UserId into urgs
@@ -19,6 +19,9 @@ public class UserQueryService(ApplicationDbContext context) : IUserQueryService
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(u => (u.Email != null && u.Email.Contains(search)) || (u.FirstName != null && u.FirstName.Contains(search)));
+
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
 
         var total = await query.CountAsync(ct);
         var items = await query.OrderBy(u => u.Email)
