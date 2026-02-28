@@ -6,6 +6,35 @@
     <title>@ViewData["Title"] - Security</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">Security</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" asp-controller="Customers" asp-action="Index">Customers</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Form Builder</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" asp-controller="FormBuilder" asp-action="Designer" asp-route-menuKey="customers">Customers Form</a></li>
+                        <li><a class="dropdown-item" asp-controller="FormBuilder" asp-action="Designer" asp-route-menuKey="products">Products Form</a></li>
+                        <li><a class="dropdown-item" asp-controller="FormBuilder" asp-action="Designer" asp-route-menuKey="contacts">Contacts Form</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4">
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show">@success <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    }
+    @RenderBody()
+</div>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
     <link rel="stylesheet" href="~/Security.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
