@@ -17,8 +17,7 @@ namespace Security.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 public class UserController(IMediator mediator, UserManager<ApplicationUser> userManager, ApplicationDbContext db, IExportService<UserExportRow> exportService) : Controller
-{
-    [HttpGet]
+{    [HttpGet]
     public async Task<IActionResult> Index(int page = 1, string? search = null)
     {
         var result = await mediator.Send(new GetUsersQuery(page, 10, search));
@@ -59,6 +58,7 @@ public class UserController(IMediator mediator, UserManager<ApplicationUser> use
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditUserViewModel vm)
     {
         if (!ModelState.IsValid) return View(vm);
@@ -67,7 +67,7 @@ public class UserController(IMediator mediator, UserManager<ApplicationUser> use
         user.FirstName = vm.FirstName;
         user.LastName = vm.LastName;
         user.IsActive = vm.IsActive;
-        user.UpdatedBy = User.Identity?.Name;
+        user.UpdatedBy = User.Identity?.Name ?? "system";
         user.UpdatedDate = DateTime.UtcNow;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
@@ -122,12 +122,4 @@ public class UserController(IMediator mediator, UserManager<ApplicationUser> use
         var rgs = await mediator.Send(new GetRoleGroupsQuery(1, 200));
         return rgs.Items.Select(rg => new SelectListItem(rg.Name, rg.Id.ToString())).ToList();
     }
-}
-
-public class UserExportRow
-{
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string IsActive { get; set; } = string.Empty;
 }

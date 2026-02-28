@@ -8,6 +8,7 @@ using Security.Application.Features.Roles.Commands;
 using Security.Application.Features.Roles.Queries;
 using Security.Application.Interfaces;
 using Security.Infrastructure.Data;
+using Security.Web.Models.Admin;
 
 namespace Security.Web.Areas.Admin.Controllers;
 
@@ -120,13 +121,4 @@ public class RoleController(IMediator mediator, ApplicationDbContext db, IExport
         var companies = await mediator.Send(new GetCompaniesQuery(1, 100));
         return companies.Items.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList();
     }
-}
-
-public class RoleExportRow
-{
-    public string Name { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Company { get; set; } = string.Empty;
-    public string IsActive { get; set; } = string.Empty;
 }
