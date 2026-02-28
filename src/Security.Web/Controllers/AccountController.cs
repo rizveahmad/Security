@@ -14,8 +14,18 @@ public class AccountController(
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+
         ViewData["ReturnUrl"] = returnUrl;
-        return View();
+        return View(new LoginViewModel());
     }
 
     [HttpPost]
@@ -33,7 +43,7 @@ public class AccountController(
         if (result.Succeeded)
         {
             logger.LogInformation("User {Email} logged in.", model.Email);
-            return LocalRedirect(returnUrl ?? "/");
+            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
         }
 
         if (result.IsLockedOut)
@@ -53,7 +63,7 @@ public class AccountController(
     {
         await signInManager.SignOutAsync();
         logger.LogInformation("User logged out.");
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]

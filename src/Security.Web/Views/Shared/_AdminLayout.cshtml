@@ -9,53 +9,39 @@
     <link rel="stylesheet" href="~/Security.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="d-flex" id="wrapper">
-        <!-- Sidebar placeholder -->
-        <div class="bg-dark text-white" id="sidebar-wrapper" style="min-width:220px;min-height:100vh">
-            <div class="sidebar-heading p-3 fw-bold border-bottom">
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-white text-decoration-none">
-                    &#9679; Security Admin
-                </a>
-            </div>
-            <div class="list-group list-group-flush">
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white">
-                    📊 Dashboard
-                </a>
-                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">MASTER DATA</div>
-                <a asp-area="Admin" asp-controller="Company" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🏢 Companies</a>
-                <a asp-area="Admin" asp-controller="Module" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📦 Modules</a>
-                <a asp-area="Admin" asp-controller="Menu" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📋 Menus</a>
-                <a asp-area="Admin" asp-controller="PermissionType" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🔑 Permission Types</a>
-                <a asp-area="Admin" asp-controller="Workstation" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">💻 Workstations</a>
-                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">ACCESS CONTROL</div>
-                <a asp-area="Admin" asp-controller="Role" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">🛡️ Roles</a>
-                <a asp-area="Admin" asp-controller="RoleGroup" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">👥 Role Groups</a>
-                <a asp-area="Admin" asp-controller="User" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">👤 Users</a>
-                <div class="list-group-item bg-dark text-white-50 small py-1 px-3 mt-2">AUDIT</div>
-                <a asp-area="Admin" asp-controller="Audit" asp-action="Index"
-                   class="list-group-item list-group-item-action bg-dark text-white ps-4">📝 Audit Log</a>
-            </div>
+    <header class="glass-nav">
+        <a class="nav-brand text-decoration-none" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            <span class="brand-icon">🛡️</span>
+            <span class="brand-text">Security Admin</span>
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <span class="user-name">@ViewData["Title"]</span>
+            <partial name="_LoginPartial" />
         </div>
+    </header>
 
-        <!-- Page Content -->
-        <div id="page-content-wrapper" class="w-100">
-            <nav class="navbar navbar-expand-sm navbar-light bg-light border-bottom px-3">
-                <span class="navbar-text me-auto">@ViewData["Title"]</span>
-                <partial name="_LoginPartial" />
+    <div class="app-layout">
+        <aside class="sidebar glass-card">
+            <nav class="sidebar-nav">
+                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+                <div class="nav-section-title">Master Data</div>
+                <a asp-area="Admin" asp-controller="Company" asp-action="Index" class="nav-link"><span class="nav-icon">🏢</span>Companies</a>
+                <a asp-area="Admin" asp-controller="Module" asp-action="Index" class="nav-link"><span class="nav-icon">📦</span>Modules</a>
+                <a asp-area="Admin" asp-controller="Menu" asp-action="Index" class="nav-link"><span class="nav-icon">📋</span>Menus</a>
+                <a asp-area="Admin" asp-controller="PermissionType" asp-action="Index" class="nav-link"><span class="nav-icon">🔑</span>Permission Types</a>
+                <a asp-area="Admin" asp-controller="Workstation" asp-action="Index" class="nav-link"><span class="nav-icon">💻</span>Workstations</a>
+                <div class="nav-section-title">Access Control</div>
+                <a asp-area="Admin" asp-controller="Role" asp-action="Index" class="nav-link"><span class="nav-icon">🛡️</span>Roles</a>
+                <a asp-area="Admin" asp-controller="RoleGroup" asp-action="Index" class="nav-link"><span class="nav-icon">👥</span>Role Groups</a>
+                <a asp-area="Admin" asp-controller="User" asp-action="Index" class="nav-link"><span class="nav-icon">👤</span>Users</a>
+                <div class="nav-section-title">Audit</div>
+                <a asp-area="Admin" asp-controller="Audit" asp-action="Index" class="nav-link"><span class="nav-icon">📝</span>Audit Log</a>
             </nav>
-            <div class="container-fluid p-4">
-                @RenderBody()
-            </div>
-        </div>
+        </aside>
+
+        <main class="main-content">
+            @RenderBody()
+        </main>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

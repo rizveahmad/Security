@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Security.Application;
 using Security.Infrastructure.Data;
 using Security.Infrastructure.Extensions;
@@ -15,17 +16,24 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
 });
 
-// Cookie-based authentication (Identity SignInManager wired in Infrastructure)
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.SlidingExpiration = true;
-    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminArea", policy =>
+        policy.RequireRole("SuperAdmin", "Admin"));
+});
 
-builder.Services.AddAuthorization();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.Name = "Security.Auth";
+});
 
 var app = builder.Build();
 
@@ -53,11 +61,12 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
+    .RequireAuthorization("AdminArea");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 app.Run();
