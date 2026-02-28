@@ -68,6 +68,9 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddSingleton<IAuthorizationHandler, DynamicPermissionHandler>();
 
+        // JWT token issuance
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+
         // Database bootstrap: script runner + deterministic startup initializer.
         services.AddScoped<IDatabaseScriptRunner, SqlScriptRunner>();
         services.AddScoped<IDatabaseBootstrapper, DatabaseBootstrapper>();
