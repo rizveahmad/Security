@@ -30,14 +30,11 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Seed the database (roles + super admin placeholder)
-if (app.Environment.IsDevelopment())
+try { await DbInitializer.SeedAsync(app.Services); }
+catch (Exception ex)
 {
-    try { await DbInitializer.SeedAsync(app.Services); }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
-    }
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Database seeding failed – ensure a SQL Server connection string is configured.");
 }
 
 if (!app.Environment.IsDevelopment())
@@ -62,7 +59,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
-await DbInitializer.SeedAsync(app.Services);
 
 app.Run();

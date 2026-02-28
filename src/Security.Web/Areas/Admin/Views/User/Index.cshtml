@@ -7,7 +7,10 @@
 }
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Users</h4>
-    <a asp-action="Create" class="btn btn-primary btn-sm">+ Create User</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary btn-sm">+ Create User</a>
+        <a asp-action="Export" asp-route-search="@ViewBag.Search" class="btn btn-outline-secondary btn-sm">📤 Export</a>
+    </div>
 </div>
 @if (TempData["Success"] is string msg)
 {
@@ -16,6 +19,10 @@
 <form method="get" class="mb-3 d-flex gap-2">
     <input name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Search..." style="max-width:300px" />
     <button class="btn btn-outline-secondary btn-sm">Search</button>
+    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+    {
+        <a asp-action="Index" class="btn btn-outline-danger btn-sm">Clear</a>
+    }
 </form>
 <table class="table table-sm table-hover">
     <thead class="table-dark"><tr><th>Email</th><th>First Name</th><th>Last Name</th><th>Role Group</th><th>Active</th><th></th></tr></thead>
@@ -29,6 +36,7 @@
                 <td>@item.RoleGroupName</td>
                 <td><span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">@(item.IsActive ? "Yes" : "No")</span></td>
                 <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
                     <a asp-action="AssignRoleGroup" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Assign Role Group</a>
                 </td>
             </tr>

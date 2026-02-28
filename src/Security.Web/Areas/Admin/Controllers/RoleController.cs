@@ -2,15 +2,18 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Security.Application.Features.Companies.Queries;
 using Security.Application.Features.Roles.Commands;
 using Security.Application.Features.Roles.Queries;
+using Security.Application.Interfaces;
+using Security.Infrastructure.Data;
 
 namespace Security.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize]
-public class RoleController(IMediator mediator) : Controller
+public class RoleController(IMediator mediator, ApplicationDbContext db, IExportService<RoleExportRow> exportService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(int page = 1, string? search = null, int? companyId = null)
@@ -91,9 +94,39 @@ public class RoleController(IMediator mediator) : Controller
         return Json(tree);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Export(string? search = null, int? companyId = null)
+    {
+        var query = db.AppRoles.AsNoTracking().Include(r => r.Company).AsQueryable();
+        if (companyId.HasValue) query = query.Where(r => r.CompanyId == companyId.Value);
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(r => r.Name.Contains(search) || r.Code.Contains(search));
+
+        var roles = await query.OrderBy(r => r.Name).Select(r => new RoleExportRow
+        {
+            Name = r.Name,
+            Code = r.Code,
+            Description = r.Description ?? string.Empty,
+            Company = r.Company != null ? r.Company.Name : string.Empty,
+            IsActive = r.IsActive ? "Yes" : "No"
+        }).ToListAsync();
+
+        var bytes = await exportService.ExportAsync(roles, "Roles");
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "roles_export.xlsx");
+    }
+
     private async Task<List<SelectListItem>> GetCompaniesSelectList()
     {
         var companies = await mediator.Send(new GetCompaniesQuery(1, 100));
         return companies.Items.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList();
     }
+}
+
+public class RoleExportRow
+{
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Company { get; set; } = string.Empty;
+    public string IsActive { get; set; } = string.Empty;
 }

@@ -10,10 +10,11 @@ namespace Security.Web.Areas.Admin.Controllers;
 public class AuditController(IMediator mediator) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(int page = 1, string? search = null)
+    public async Task<IActionResult> Index(int page = 1, string? search = null, string? action = null)
     {
-        var result = await mediator.Send(new GetAuditLogsQuery(page, 20, search));
+        var result = await mediator.Send(new GetAuditLogsQuery(page, 20, search, action));
         ViewBag.Search = search;
+        ViewBag.Action = action;
         return View(result);
     }
 }

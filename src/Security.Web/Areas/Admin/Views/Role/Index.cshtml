@@ -7,7 +7,10 @@
 }
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Roles</h4>
-    <a asp-action="Create" class="btn btn-primary btn-sm">+ Add Role</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary btn-sm">+ Add Role</a>
+        <a asp-action="Export" asp-route-search="@ViewBag.Search" asp-route-companyId="@ViewBag.CompanyId" class="btn btn-outline-secondary btn-sm">📤 Export</a>
+    </div>
 </div>
 @if (TempData["Success"] is string msg)
 {
