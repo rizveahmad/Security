@@ -18,4 +18,25 @@ public class DashboardController(ApplicationDbContext db) : Controller
             .CountAsync(a => a.Timestamp >= DateTime.UtcNow.AddDays(-7));
         return View();
     }
+
+    /// <summary>
+    /// Stores the selected tenant in the session so <see cref="Services.TenantContext"/>
+    /// can resolve it on subsequent requests.
+    /// SuperAdmin may pass an empty/null value to clear the filter (view all tenants).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SelectTenant(int? tenantId)
+    {
+        if (tenantId.HasValue)
+            HttpContext.Session.SetInt32("SelectedTenantId", tenantId.Value);
+        else
+            HttpContext.Session.Remove("SelectedTenantId");
+
+        var returnUrl = Request.Headers.Referer.ToString();
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return Redirect(returnUrl);
+
+        return RedirectToAction(nameof(Index));
+    }
 }

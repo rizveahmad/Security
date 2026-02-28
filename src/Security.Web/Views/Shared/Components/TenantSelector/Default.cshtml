@@ -1,0 +1,17 @@
+@model Security.Web.ViewComponents.TenantSelectorViewModel
+
+<form asp-area="Admin" asp-controller="Dashboard" asp-action="SelectTenant" method="post"
+      class="d-flex align-items-center gap-2">
+    @Html.AntiForgeryToken()
+    <select name="tenantId" class="form-select form-select-sm tenant-select"
+            onchange="this.form.submit()" title="Select tenant / company">
+        @if (ViewContext.HttpContext.User.IsInRole("SuperAdmin"))
+        {
+            <option value="" selected="@(Model.SelectedTenantId == null)">All Tenants</option>
+        }
+        @foreach (var company in Model.Companies)
+        {
+            <option value="@company.Id" selected="@(Model.SelectedTenantId == company.Id)">@company.Name</option>
+        }
+    </select>
+</form>
