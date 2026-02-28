@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Security.Application.Authorization;
+using Security.Application.Interfaces;
 using Security.Infrastructure.Data;
 
 namespace Security.Infrastructure.Authorization;
@@ -8,8 +9,13 @@ namespace Security.Infrastructure.Authorization;
 /// DB-backed permission evaluation: user -> role group -> roles -> permission types.
 /// The query joins through RoleGroups so that EF Core's global tenant query filter
 /// is applied automatically, making permission evaluation tenant-aware.
+/// Results are cached per (tenantId, userId) via <see cref="IPermissionCache"/>
+/// and invalidated whenever assignments or role definitions change.
 /// </summary>
-public class PermissionService(ApplicationDbContext context) : IPermissionService
+public class PermissionService(
+    ApplicationDbContext context,
+    IPermissionCache permissionCache,
+    ITenantContext tenantContext) : IPermissionService
 {
     public async Task<bool> HasPermissionAsync(string userId, string permissionCode, CancellationToken ct = default)
     {
@@ -19,6 +25,12 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
 
     public async Task<IReadOnlyList<string>> GetUserPermissionsAsync(string userId, CancellationToken ct = default)
     {
+        var tenantId = tenantContext.TenantId;
+
+        var cached = permissionCache.Get(tenantId, userId);
+        if (cached != null)
+            return cached;
+
         // Join through RoleGroups so the global tenant query filter (CompanyId isolation)
         // is enforced automatically. SuperAdmin gets all permissions when no tenant is selected.
         var permissions = await (
@@ -34,6 +46,8 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
             select pt.Code
         ).Where(c => c != null).Distinct().ToListAsync(ct);
 
-        return permissions!;
+        var result = permissions!;
+        permissionCache.Set(tenantId, userId, result);
+        return result;
     }
 }

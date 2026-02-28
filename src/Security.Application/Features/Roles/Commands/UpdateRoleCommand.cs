@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Security.Application.Authorization;
 using Security.Application.Common.Interfaces;
 using Security.Domain.Entities;
 
@@ -18,7 +19,9 @@ public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
     }
 }
 
-public class UpdateRoleCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdateRoleCommand, bool>
+public class UpdateRoleCommandHandler(
+    IApplicationDbContext context,
+    IPermissionCache permissionCache) : IRequestHandler<UpdateRoleCommand, bool>
 {
     public async Task<bool> Handle(UpdateRoleCommand request, CancellationToken ct)
     {
@@ -38,6 +41,8 @@ public class UpdateRoleCommandHandler(IApplicationDbContext context) : IRequestH
             entity.Permissions.Add(new RolePermission { PermissionTypeId = newId, CreatedDate = DateTime.UtcNow, CreatedBy = "system" });
 
         await context.SaveChangesAsync(ct);
+
+        permissionCache.InvalidateTenant(request.CompanyId);
         return true;
     }
 }

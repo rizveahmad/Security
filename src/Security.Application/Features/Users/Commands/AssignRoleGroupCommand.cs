@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Security.Application.Authorization;
 using Security.Application.Common.Interfaces;
+using Security.Application.Interfaces;
 using Security.Domain.Entities;
 
 namespace Security.Application.Features.Users.Commands;
@@ -17,7 +19,10 @@ public class AssignRoleGroupCommandValidator : AbstractValidator<AssignRoleGroup
     }
 }
 
-public class AssignRoleGroupCommandHandler(IApplicationDbContext context) : IRequestHandler<AssignRoleGroupCommand, bool>
+public class AssignRoleGroupCommandHandler(
+    IApplicationDbContext context,
+    IPermissionCache permissionCache,
+    ITenantContext tenantContext) : IRequestHandler<AssignRoleGroupCommand, bool>
 {
     public async Task<bool> Handle(AssignRoleGroupCommand request, CancellationToken ct)
     {
@@ -26,6 +31,8 @@ public class AssignRoleGroupCommandHandler(IApplicationDbContext context) : IReq
 
         context.UserRoleGroups.Add(new UserRoleGroup { UserId = request.UserId, RoleGroupId = request.RoleGroupId, CreatedDate = DateTime.UtcNow, CreatedBy = "system" });
         await context.SaveChangesAsync(ct);
+
+        permissionCache.InvalidateUser(tenantContext.TenantId, request.UserId);
         return true;
     }
 }

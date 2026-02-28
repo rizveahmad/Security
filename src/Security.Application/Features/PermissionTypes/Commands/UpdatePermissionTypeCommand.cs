@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Security.Application.Authorization;
 using Security.Application.Common.Interfaces;
 
 namespace Security.Application.Features.PermissionTypes.Commands;
@@ -16,7 +17,9 @@ public class UpdatePermissionTypeCommandValidator : AbstractValidator<UpdatePerm
     }
 }
 
-public class UpdatePermissionTypeCommandHandler(IApplicationDbContext context) : IRequestHandler<UpdatePermissionTypeCommand, bool>
+public class UpdatePermissionTypeCommandHandler(
+    IApplicationDbContext context,
+    IPermissionCache permissionCache) : IRequestHandler<UpdatePermissionTypeCommand, bool>
 {
     public async Task<bool> Handle(UpdatePermissionTypeCommand request, CancellationToken ct)
     {
@@ -26,6 +29,9 @@ public class UpdatePermissionTypeCommandHandler(IApplicationDbContext context) :
         entity.MenuId = request.MenuId; entity.IsActive = request.IsActive;
         entity.UpdatedDate = DateTime.UtcNow; entity.UpdatedBy = "system";
         await context.SaveChangesAsync(ct);
+
+        // PermissionTypes are not directly scoped to a single tenant, so invalidate all.
+        permissionCache.InvalidateAll();
         return true;
     }
 }
