@@ -46,7 +46,9 @@ public sealed class InMemoryPermissionCache(IMemoryCache cache) : IPermissionCac
     {
         CancellationTokenSource cts;
         lock (_tokenLock)
+        {
             cts = GetOrCreateTenantCts(tenantId);
+        }
 
         var options = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(DefaultExpiry)

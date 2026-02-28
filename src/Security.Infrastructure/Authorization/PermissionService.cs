@@ -46,7 +46,7 @@ public class PermissionService(
             select pt.Code
         ).Where(c => c != null).Distinct().ToListAsync(ct);
 
-        var result = (IReadOnlyList<string>)permissions!;
+        var result = permissions!;
         permissionCache.Set(tenantId, userId, result);
         return result;
     }
