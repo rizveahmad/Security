@@ -30,6 +30,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    // Default sliding window for regular (non-remembered) sessions.
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
@@ -39,6 +40,16 @@ builder.Services.ConfigureApplicationCookie(options =>
         : CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.Name = "Security.Auth";
+    // Persistent "remember me" cookies get a 14-day sliding window;
+    // non-persistent session cookies keep the 30-minute default above.
+    options.Events.OnSigningIn = ctx =>
+    {
+        if (ctx.Properties.IsPersistent)
+        {
+            ctx.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14);
+        }
+        return Task.CompletedTask;
+    };
 });
 
 // JWT Bearer authentication for API endpoints.
