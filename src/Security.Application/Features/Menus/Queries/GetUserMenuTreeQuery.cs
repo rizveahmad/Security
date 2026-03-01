@@ -45,11 +45,11 @@ public class GetUserMenuTreeQueryHandler(
         // Group by module to form the tree.
         var tree = accessible
             .Where(m => m.Module != null)
-            .GroupBy(m => m.Module!)
-            .OrderBy(g => g.Key.Name)
+            .GroupBy(m => m.ModuleId)
+            .OrderBy(g => g.First().Module!.Name)
             .Select(g => new MenuModuleDto(
-                g.Key.Id,
-                g.Key.Name,
+                g.Key,
+                g.First().Module!.Name,
                 g.OrderBy(m => m.DisplayOrder).ThenBy(m => m.Name)
                  .Select(m => new MenuItemDto(m.Id, m.Name, m.Code, m.Url, m.Icon, m.DisplayOrder))
                  .ToList()))
