@@ -1,7 +1,7 @@
 @model Security.Web.Models.Account.LoginViewModel
 @{
     ViewData["Title"] = "Login";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
 }
 
 <div class="login-container">
@@ -14,29 +14,38 @@
 
         @if (!string.IsNullOrWhiteSpace(ViewData["ReturnUrl"] as string))
         {
-            <div class="alert alert-danger">Please log in to continue.</div>
+            <div class="alert alert-danger" role="alert">Please log in to continue.</div>
         }
 
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        }
 
         <form asp-action="Login" method="post" id="loginForm" novalidate>
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
             <div class="form-group">
-                <label asp-for="Identifier" class="form-label"></label>
-                <input asp-for="Identifier" class="form-control" autocomplete="username" placeholder="username or email" />
+                <label asp-for="Identifier" class="form-label">Username or Email</label>
+                <input asp-for="Identifier" class="form-control" autocomplete="username"
+                       placeholder="Enter username or email" autofocus />
                 <span asp-validation-for="Identifier" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" autocomplete="current-password" placeholder="••••••••" />
+                <label asp-for="Password" class="form-label">Password</label>
+                <div class="password-wrapper">
+                    <input asp-for="Password" class="form-control" autocomplete="current-password"
+                           placeholder="Enter your password" />
+                    <button type="button" class="password-toggle" aria-label="Show password"
+                            onclick="togglePassword(this)">👁</button>
+                </div>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
             <div class="form-check mb-3">
                 <input asp-for="RememberMe" class="form-check-input" />
-                <label asp-for="RememberMe" class="form-check-label"></label>
+                <label asp-for="RememberMe" class="form-check-label">Remember me</label>
             </div>
 
             <button type="submit" class="glass-btn glass-btn-primary w-100">Sign in</button>
@@ -46,4 +55,13 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(btn) {
+            const input = btn.previousElementSibling;
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.textContent = show ? '🙈' : '👁';
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        }
+    </script>
 }
