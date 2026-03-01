@@ -22,7 +22,8 @@ public class DashboardController(ApplicationDbContext db) : Controller
     /// <summary>
     /// Stores the selected tenant in the session so <see cref="Services.TenantContext"/>
     /// can resolve it on subsequent requests.
-    /// SuperAdmin may pass an empty/null value to clear the filter (view all tenants).
+    /// Only SuperAdmin may pass an empty/null value to clear the filter (view all tenants).
+    /// Regular admins must always have an active tenant selected.
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -30,8 +31,9 @@ public class DashboardController(ApplicationDbContext db) : Controller
     {
         if (tenantId.HasValue)
             HttpContext.Session.SetInt32("SelectedTenantId", tenantId.Value);
-        else
+        else if (User.IsInRole("SuperAdmin"))
             HttpContext.Session.Remove("SelectedTenantId");
+        // Non-SuperAdmin attempting to clear tenant filter: silently ignore to preserve isolation.
 
         var returnUrl = Request.Headers.Referer.ToString();
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
