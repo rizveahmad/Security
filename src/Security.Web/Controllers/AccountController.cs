@@ -53,7 +53,9 @@ public class AccountController(
         if (result.Succeeded)
         {
             logger.LogInformation("User {Identifier} logged in.", model.Identifier);
-            return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? Url.Action("Index", "Home")! : returnUrl);
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return LocalRedirect(returnUrl);
+            return RedirectToAction("Index", "Home");
         }
 
         if (result.IsLockedOut)
