@@ -61,8 +61,7 @@ public class AccountController(
         if (result.IsLockedOut)
         {
             logger.LogWarning("User {Identifier} account locked out.", model.Identifier);
-            ModelState.AddModelError(string.Empty, "Account locked out. Please try again later.");
-            return View(model);
+            return RedirectToAction(nameof(Lockout));
         }
 
         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
@@ -77,6 +76,10 @@ public class AccountController(
         logger.LogInformation("User logged out.");
         return RedirectToAction(nameof(Login));
     }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Lockout() => View();
 
     [HttpGet]
     [AllowAnonymous]
