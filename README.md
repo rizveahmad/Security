@@ -1,17 +1,36 @@
-# Security — JSON Form Builder
+# Security Platform
 
-A .NET 10 MVC application implementing a reusable JSON-based form builder that injects dynamic extension fields into core master forms (Customers, Products, Contacts, …).
+A .NET 10 MVC web application that provides centralised **user management, role-based access control, dynamic permissions, multi-tenant company isolation, and audit logging** — the foundation layer for building secure, multi-tenant business applications.
+
+---
+
+## Purpose
+
+The Security platform manages:
+
+- **Identity & Authentication** — cookie-based login (username or email), ASP.NET Core Identity
+- **Roles & Role Groups** — hierarchical role assignment per tenant
+- **Dynamic Permissions** — per-module, per-menu, per-workstation permission types; resolved at runtime and cached
+- **Multi-Tenancy** — each Company is an isolated tenant; global EF Core query filters enforce row-level isolation
+- **User Management** — create/edit/import/export users with active-status filtering
+- **Audit Logging** — all significant actions are recorded
+- **JWT Token API** — `POST /api/auth/token` issues a short-lived bearer token for external integrations
+- **SuperAdmin** — a built-in bootstrapped administrator that bypasses all dynamic permission checks
 
 ---
 
 ## Architecture
 
 ```
-Security.Domain          ← domain entities (ApplicationUser, Company, AppRole, …)
-Security.Application     ← interfaces & use-case logic
-Security.Infrastructure  ← EF Core, Identity, deterministic DB bootstrap
-Security.Web             ← MVC controllers + Razor views
+Security.Domain          ← entities, value objects (AppRole, AppModule, RoleGroup, Workstation, …)
+Security.Application     ← CQRS (MediatR), interfaces, DTOs, validation
+Security.Infrastructure  ← EF Core, Identity, authorization handlers, caching, services
+Security.Web             ← ASP.NET Core MVC controllers + Razor views (Areas/Admin)
 ```
+
+Dependency direction: **Domain ← Application ← Infrastructure ← Web**
+
+All admin UI lives under `Areas/Admin`. There are no Razor Pages (`Pages/` folder) in this project.
 
 ---
 
@@ -19,130 +38,114 @@ Security.Web             ← MVC controllers + Razor views
 
 ### Prerequisites
 
-- .NET 10 SDK
-- SQL Server (LocalDB, Express, or full) reachable at the `DefaultConnection` string
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- SQL Server (LocalDB, Express, Developer, or Docker) reachable at the `DefaultConnection` string
 
-### Run
+### Run locally
 
 ```bash
-# Build
+# 1. Clone and build
 dotnet build Security.slnx
 
-# Set the SuperAdmin password (user-secrets, env-var, or appsettings.Development.json)
+# 2. Set the connection string (user-secrets recommended)
 cd src/Security.Web
-dotnet user-secrets set "Seed:SuperAdminPassword" "YourPassword@1"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
+  "Server=(localdb)\\mssqllocaldb;Database=SecurityDb;Trusted_Connection=True;TrustServerCertificate=True"
 
-# Run — the app automatically:
-#   1. Creates the database if it does not exist
-#   2. Runs numbered SQL scripts from scripts/ (Identity schema + business tables)
-#   3. Seeds roles (SuperAdmin, Admin, User) and the SuperAdmin user
+# 3. Set the SuperAdmin seed password
+dotnet user-secrets set "Seed:SuperAdminPassword" "YourStrongPassword123!"
+
+# 4. Run — the app bootstraps the database automatically
 dotnet run
 ```
 
 No `dotnet ef database update` or manual SQL execution is required.
 
-Default SuperAdmin: `superadmin@security.local` / password from `Seed:SuperAdminPassword`
+After startup, log in at `https://localhost:<port>` with:
+
+- **Email:** `superadmin@security.local`
+- **Password:** the value you set in `Seed:SuperAdminPassword`
+
+> **Never commit a real password.** The `Seed:SuperAdminPassword` key in `appsettings.json` is intentionally empty; supply the value via user-secrets, an environment variable, or a secrets manager.
+
+See **[docs/DEV_SETUP.md](docs/DEV_SETUP.md)** for full setup instructions.
 
 ---
 
-## Deterministic Bootstrap
+## Automatic Database Bootstrap
 
-Startup order (executed before the first request is handled):
+On every startup the app runs three steps (before the first request is served):
 
 | Step | Component | What it does |
 |------|-----------|--------------|
 | 1 | `DatabaseBootstrapper` | Connects to SQL Server `master` and issues `CREATE DATABASE` if the target DB is missing |
-| 2 | `SqlScriptRunner` | Runs each `scripts/NNNN_*.sql` file in lexical order, skipping scripts already recorded in `dbo.ScriptExecutionHistory` |
-| 3 | `DbInitializer` | Seeds Identity roles and the SuperAdmin user (idempotent – skips if already present) |
+| 2 | `SqlScriptRunner` | Runs each `scripts/NNNN_*.sql` file in lexical order; skips scripts already recorded in `dbo.ScriptExecutionHistory` |
+| 3 | `DbInitializer` | Seeds Identity roles (`SuperAdmin`, `Admin`, `User`) and the SuperAdmin user (idempotent — skips if already present) |
 
 ### Adding a schema change
 
-Place a new file `scripts/NNNN_description.sql` in the repo-root `scripts/` folder.
-The `CopySqlScripts` build target in `Security.Web.csproj` copies it to `scripts/` inside the
-build-output directory automatically — no extra steps needed.
-The script must be idempotent (wrap DDL in `IF NOT EXISTS` guards).
+Place a new file `scripts/NNNN_description.sql` in the repo-root `scripts/` folder.  
+The `CopySqlScripts` build target in `Security.Web.csproj` copies it into the build-output directory automatically — no extra steps needed.  
+Scripts must be idempotent (wrap DDL in `IF NOT EXISTS` guards).
 
-### Configuration
+---
+
+## Configuration Reference
 
 | Key | Required | Purpose |
 |-----|----------|---------|
 | `ConnectionStrings:DefaultConnection` | **Yes** | SQL Server connection string |
-| `Seed:SuperAdminPassword` | Recommended | Password for the seeded SuperAdmin account |
+| `Seed:SuperAdminPassword` | Recommended | Password for the bootstrapped SuperAdmin account |
+| `Jwt:Key` | Recommended | Secret key for signing JWT tokens (min 32 chars) |
+| `Jwt:Issuer` / `Jwt:Audience` | No | JWT claims (default: `SecurityApp` / `SecurityApi`) |
+| `Jwt:ExpiresInMinutes` | No | Token lifetime in minutes (default: `60`) |
 | `ScriptRunner:ScriptFolder` | No | Override the default script folder (defaults to `scripts/` next to the executable) |
 
 ---
 
-## Phase 1 — Form Definition Model
+## Multi-Tenancy
 
-| Entity | Purpose |
-|---|---|
-| `FormDefinition` | One record per menu key (e.g. `customers`). Stores versioned `FieldsJson`. |
-| `FormFieldDefinition` | POCO deserialized from `FieldsJson`. Fields: key, label, type, required, placeholder, helpText, options, order. |
-| `FormSubmission` | Stores per-record extension field values as `ValuesJson` keyed by `MenuKey + RecordKey`. |
+The `Company` entity is the tenant root. Every resource that requires isolation (users, roles, role-groups, modules, permissions, workstations) is scoped to a `CompanyId`. EF Core global query filters on `AppModule`, `AppRole`, `RoleGroup`, and `Workstation` automatically restrict queries to the active tenant.
 
-**Supported field types:** `Text`, `Number`, `Dropdown`, `Date`, `Checkbox`, `Textarea`
+A `null` tenant context grants SuperAdmin-level bypass (no filter applied).
+
+> **Status:** The tenant isolation infrastructure is implemented. A full self-service company-onboarding workflow is on the roadmap.
 
 ---
 
-## Phase 2 — Designer & Renderer
+## Dynamic Permissions
 
-### Designer (`/FormBuilder/Designer?menuKey=<key>`)
+The `DynamicPermissionHandler` resolves the required `PermissionType` for each policy at runtime via `IPermissionService`. The permission graph (User → RoleGroup → Roles → PermissionTypes) is cached in-memory with per-tenant invalidation (`IPermissionCache`). SuperAdmin users skip the handler entirely.
 
-- Protected by `[Authorize(Roles="SuperAdmin,Admin")]`
-- **Left panel**: Field type palette (click to add)
-- **Centre canvas**: SortableJS drag-to-reorder list (SRI-pinned CDN)
-- **Right panel**: Property editor — label, key, required, placeholder, help text, dropdown options
-- **Save**: Serialises current field array as JSON → POST `/FormBuilder/Save`
+---
 
-### Reusable Renderer — `Views/Shared/_FormFields.cshtml`
+## JWT Token API *(implemented)*
 
-```cshtml
-@* Include inside any master form's <fieldset> *@
-@{
-    ViewData["ExtValues"] = extensionValuesDictionary; // Dictionary<string, string?>
-}
-@await Html.PartialAsync("_FormFields", extensionFieldList)
+External integrations authenticate via:
+
+```
+POST /api/auth/token
+Content-Type: application/json
+
+{ "username": "user@example.com", "password": "…" }
 ```
 
-Renders all 6 field types, shows required markers, renders validation errors from `ModelState`.
+Returns a short-lived JWT bearer token. API controllers decorated with `[Authorize(AuthenticationSchemes="Bearer")]` accept bearer tokens; browser controllers continue to use cookie authentication.
 
 ---
 
-## Phase 3 — Integration into Core Menu Forms
+## Roadmap *(planned, not yet implemented)*
 
-### Where the form builder hooks in
-
-| Location | File | Description |
-|---|---|---|
-| Fixed fields | `Views/Customers/Create.cshtml` lines 13–28 | `<fieldset>` with hardcoded Name and Email inputs |
-| Extension region | `Views/Customers/Create.cshtml` lines 30–41 | Calls `_FormFields` partial with `ViewBag.ExtensionFields` |
-| Load extension fields | `CustomersController.Create (GET)` | `var fields = await _formBuilder.GetFieldsAsync("customers");` |
-| Validate extension fields | `CustomersController.Create (POST)` | `var validation = await _formBuilder.ValidateAsync("customers", extValues);` |
-| Save extension values | `CustomersController.Create (POST)` | `await _formBuilder.SaveSubmissionAsync("customers", recordKey, extValues);` |
-| Form prefix convention | All extension `<input name="…">` | Prefixed `ext_` so controller can strip and separate from fixed fields |
-
-### Adding form builder to another menu
-
-1. Inject `IFormBuilderService` into the controller.
-2. `GET` action: call `GetFieldsAsync(menuKey)` → put in `ViewBag.ExtensionFields`.
-3. View: wrap `@await Html.PartialAsync("_FormFields", extFields)` inside a `<fieldset>`.
-4. `POST` action: call `ExtractExtensionValues(form)` (strip `ext_` prefix), then `ValidateAsync` + `SaveSubmissionAsync`.
-5. Navigate to `/FormBuilder/Designer?menuKey=<key>` to design the extension fields.
-
-### Quick-insert modal
-
-`Views/Shared/_QuickInsert.cshtml` provides a reusable Bootstrap modal + JS helpers:
-
-- `openQuickInsert(sourceUrl, targetFieldId)` — loads a partial form via AJAX
-- `quickInsertDone(value, text, targetFieldId)` — appends option to target `<select>` and closes modal
-- Access to quick insert should be gated by checking the user's role against the source menu's permission before rendering the trigger button.
+- Self-service company onboarding (tenant registration UI)
+- Password reset / email confirmation flow
+- Delegated admin — company admins managing their own users without SuperAdmin access
+- Fine-grained per-resource row-level permissions
+- Refresh token support for the JWT API
 
 ---
 
-## Remaining Gaps (explicit)
+## Running Tests
 
-- Only the **Customers** menu is wired up; Products/Contacts follow the same pattern (documented above).
-- Dynamic dropdown data sources (`DynamicSource` field) are modelled but not yet rendered — static options only.
-- Quick-insert submit endpoint (save + return `value`/`text`) needs to be implemented per source menu.
-- Full CRUD list/edit pages for Customers are stubs; real persistence depends on the domain tables you add.
-- File upload field type not yet included.
+```bash
+dotnet test Security.slnx
+```

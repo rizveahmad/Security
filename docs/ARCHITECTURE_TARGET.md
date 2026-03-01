@@ -16,9 +16,9 @@ SQL Server is the target database engine. The connection string is configured in
 
 ### Auto Database Creation and Scripts Runner
 
-On application startup `DbInitializer` (called from `Program.cs`) applies any pending EF Core migrations automatically and then runs seed scripts. This means the database schema and baseline data are always up-to-date without manual migration commands during development or deployment.
+On application startup `DatabaseBootstrapper` connects to SQL Server `master` and creates the target database if it does not exist. `SqlScriptRunner` then executes any numbered `scripts/NNNN_*.sql` files that have not yet been recorded in `dbo.ScriptExecutionHistory`. Finally `DbInitializer` seeds Identity roles and the SuperAdmin account idempotently.
 
-No direct SQL scripts are committed to the repo; all schema changes go through EF Core migrations.
+No EF Core migrations are used; all schema changes go through numbered SQL scripts in the repo-root `scripts/` folder.
 
 ## Authentication & Sessions
 
@@ -54,9 +54,7 @@ Authorization is policy-based. `DynamicPermissionHandler` resolves the required 
 
 ## External API Authentication (Token-Based)
 
-External applications (integrations, mobile clients, scripts) authenticate via a dedicated token endpoint rather than cookie sessions. Tokens are issued as short-lived bearer tokens. API controllers decorated with `[Authorize(AuthenticationSchemes = "Bearer")]` accept only bearer tokens; standard browser controllers continue to use cookie auth.
-
-> **Note:** The bearer/token infrastructure is planned and the architecture slot is reserved here. Exact token format (JWT vs opaque) will be decided when the external-app integration feature is implemented.
+External applications (integrations, mobile clients, scripts) authenticate via `POST /api/auth/token`, which issues a short-lived JWT bearer token. API controllers decorated with `[Authorize(AuthenticationSchemes = "Bearer")]` accept only bearer tokens; standard browser controllers continue to use cookie auth.
 
 ## Project Layer Responsibilities
 
