@@ -6,7 +6,7 @@ This guide explains how to run the Security application locally on a Windows or 
 
 | Requirement | Notes |
 |-------------|-------|
-| .NET SDK 8+ | [Download](https://dotnet.microsoft.com/download) |
+| .NET SDK 10 | [Download](https://dotnet.microsoft.com/download) |
 | SQL Server | Local SQL Server Express, Developer Edition, or Docker (`mcr.microsoft.com/mssql/server`) |
 | Visual Studio 2022 (or VS Code) | Optional but recommended |
 
@@ -64,7 +64,7 @@ export Seed__SuperAdminPassword="YourStrongPassword123!"
 ```
 
 > **Never commit a real password to `appsettings.json`.**  
-> The placeholder value in `appsettings.json` (`Admin@123456!`) is for reference only and should be overridden locally.
+> The `Seed:SuperAdminPassword` key in `appsettings.json` is intentionally empty; supply the value via user-secrets, an environment variable, or a secrets manager.
 
 ---
 
@@ -77,7 +77,7 @@ cd src/Security.Web
 dotnet run
 ```
 
-The app starts on `https://localhost:5001` (or the port shown in the terminal). It automatically applies EF Core migrations and seeds the database on first run.
+The app starts on `https://localhost:5001` (or the port shown in the terminal). It automatically creates the database, runs numbered SQL scripts from `scripts/`, and seeds Identity roles and the SuperAdmin account on first run.
 
 ### From Visual Studio
 
@@ -103,5 +103,5 @@ dotnet test Security.slnx
 |---------|---------|
 | `A network-related or instance-specific error` | SQL Server is not running, or the connection string is wrong. |
 | `Login failed for user` | Use Windows auth (`Trusted_Connection=True`) or add SQL login credentials. |
-| `No migrations applied` | The app applies migrations on startup; check app logs for EF Core errors. |
+| `No migrations applied` | The app uses SQL scripts (not EF migrations) for schema; check app logs for `SqlScriptRunner` errors. |
 | `Invalid password for SuperAdmin` | Set `Seed:SuperAdminPassword` via user-secrets or env var (see step 2). |
