@@ -7,9 +7,9 @@ A .NET 10 MVC application implementing a reusable JSON-based form builder that i
 ## Architecture
 
 ```
-Security.Domain          ← domain entities (FormDefinition, FormFieldDefinition, FormSubmission, ApplicationUser)
-Security.Application     ← interfaces (IFormBuilderService, IAppDbContext, ValidationResult)
-Security.Infrastructure  ← EF Core + Identity (AppDbContext, FormBuilderService, DbInitializer)
+Security.Domain          ← domain entities (ApplicationUser, Company, AppRole, …)
+Security.Application     ← interfaces & use-case logic
+Security.Infrastructure  ← EF Core, Identity, deterministic DB bootstrap
 Security.Web             ← MVC controllers + Razor views
 ```
 
@@ -17,22 +17,58 @@ Security.Web             ← MVC controllers + Razor views
 
 ## Getting Started
 
+### Prerequisites
+
+- .NET 10 SDK
+- SQL Server (LocalDB, Express, or full) reachable at the `DefaultConnection` string
+
+### Run
+
 ```bash
 # Build
 dotnet build Security.slnx
 
-# Run (creates security.db + seeds SuperAdmin)
+# Set the SuperAdmin password (user-secrets, env-var, or appsettings.Development.json)
 cd src/Security.Web
+dotnet user-secrets set "Seed:SuperAdminPassword" "YourPassword@1"
+
+# Run — the app automatically:
+#   1. Creates the database if it does not exist
+#   2. Runs numbered SQL scripts from scripts/ (Identity schema + business tables)
+#   3. Seeds roles (SuperAdmin, Admin, User) and the SuperAdmin user
 dotnet run
 ```
 
-Set the SuperAdmin password via user-secrets or environment variable:
+No `dotnet ef database update` or manual SQL execution is required.
 
-```bash
-dotnet user-secrets set "Seed:SuperAdminPassword" "YourPassword@1"
-```
+Default SuperAdmin: `superadmin@security.local` / password from `Seed:SuperAdminPassword`
 
-Default seed: `superadmin@security.local` / `Admin@12345!`
+---
+
+## Deterministic Bootstrap
+
+Startup order (executed before the first request is handled):
+
+| Step | Component | What it does |
+|------|-----------|--------------|
+| 1 | `DatabaseBootstrapper` | Connects to SQL Server `master` and issues `CREATE DATABASE` if the target DB is missing |
+| 2 | `SqlScriptRunner` | Runs each `scripts/NNNN_*.sql` file in lexical order, skipping scripts already recorded in `dbo.ScriptExecutionHistory` |
+| 3 | `DbInitializer` | Seeds Identity roles and the SuperAdmin user (idempotent – skips if already present) |
+
+### Adding a schema change
+
+Place a new file `scripts/NNNN_description.sql` in the repo-root `scripts/` folder.
+The `CopySqlScripts` build target in `Security.Web.csproj` copies it to `scripts/` inside the
+build-output directory automatically — no extra steps needed.
+The script must be idempotent (wrap DDL in `IF NOT EXISTS` guards).
+
+### Configuration
+
+| Key | Required | Purpose |
+|-----|----------|---------|
+| `ConnectionStrings:DefaultConnection` | **Yes** | SQL Server connection string |
+| `Seed:SuperAdminPassword` | Recommended | Password for the seeded SuperAdmin account |
+| `ScriptRunner:ScriptFolder` | No | Override the default script folder (defaults to `scripts/` next to the executable) |
 
 ---
 

@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Security.Infrastructure.Data;
@@ -12,7 +11,7 @@ namespace Security.Infrastructure.Data;
 /// recorded in <c>dbo.ScriptExecutionHistory</c>.  Idempotent and production-safe.
 ///
 /// To add a new migration, place a file named <c>NNNN_description.sql</c> in the scripts
-/// folder (default: <c>scripts</c> relative to the application content root).
+/// folder (default: <c>scripts</c> relative to the application base directory).
 /// </summary>
 public sealed class SqlScriptRunner : IDatabaseScriptRunner
 {
@@ -22,7 +21,6 @@ public sealed class SqlScriptRunner : IDatabaseScriptRunner
 
     public SqlScriptRunner(
         IConfiguration configuration,
-        IHostEnvironment hostEnvironment,
         ILogger<SqlScriptRunner> logger)
     {
         _logger = logger;
@@ -31,13 +29,16 @@ public sealed class SqlScriptRunner : IDatabaseScriptRunner
             ?? throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-        // Allow override via config; fall back to <ContentRoot>/scripts.
+        // Allow override via config; fall back to <AppBaseDir>/scripts.
+        // AppContext.BaseDirectory is the directory that contains the executing assembly,
+        // which is where the build target copies SQL scripts (bin/Debug/net*/scripts or
+        // the publish directory) – correct for both `dotnet run` and published deployments.
         var configuredFolder = configuration["ScriptRunner:ScriptFolder"];
         _scriptFolder = string.IsNullOrWhiteSpace(configuredFolder)
-            ? Path.Combine(hostEnvironment.ContentRootPath, "scripts")
+            ? Path.Combine(AppContext.BaseDirectory, "scripts")
             : Path.IsPathRooted(configuredFolder)
                 ? configuredFolder
-                : Path.Combine(hostEnvironment.ContentRootPath, configuredFolder);
+                : Path.Combine(AppContext.BaseDirectory, configuredFolder);
     }
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
