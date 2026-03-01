@@ -35,12 +35,10 @@ public class PermissionService(
         // is enforced automatically. SuperAdmin gets all permissions when no tenant is selected.
         var permissions = await (
             from urg in context.UserRoleGroups.AsNoTracking()
-            where urg.UserId == userId && !urg.IsDeleted
+            where urg.UserId == userId
             join rg in context.RoleGroups.AsNoTracking() on urg.RoleGroupId equals rg.Id
             join rgr in context.RoleGroupRoles.AsNoTracking() on urg.RoleGroupId equals rgr.RoleGroupId
-            where !rgr.IsDeleted
             join rp in context.RolePermissions.AsNoTracking() on rgr.RoleId equals rp.RoleId
-            where !rp.IsDeleted
             join pt in context.PermissionTypes.AsNoTracking() on rp.PermissionTypeId equals pt.Id
             where pt.Code != null
             select pt.Code

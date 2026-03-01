@@ -51,19 +51,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // tenant isolation: records are only visible when their CompanyId matches the
         // active tenant, unless no tenant is selected (ActiveTenantId == null) which
         // allows SuperAdmin to view records across all tenants.
-        builder.Entity<Company>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<AppModule>().HasQueryFilter(e => !e.IsDeleted
+        builder.Entity<Company>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<AppModule>().HasQueryFilter(e => e.DeletedDate == null
             && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
-        builder.Entity<AppMenu>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<PermissionType>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<AppRole>().HasQueryFilter(e => !e.IsDeleted
+        builder.Entity<AppMenu>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<PermissionType>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<AppRole>().HasQueryFilter(e => e.DeletedDate == null
             && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
-        builder.Entity<RolePermission>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<RoleGroup>().HasQueryFilter(e => !e.IsDeleted
+        builder.Entity<RolePermission>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<RoleGroup>().HasQueryFilter(e => e.DeletedDate == null
             && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
-        builder.Entity<RoleGroupRole>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<UserRoleGroup>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<Workstation>().HasQueryFilter(e => !e.IsDeleted
+        builder.Entity<RoleGroupRole>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<UserRoleGroup>().HasQueryFilter(e => e.DeletedDate == null);
+        builder.Entity<Workstation>().HasQueryFilter(e => e.DeletedDate == null
             && (ActiveTenantId == null || e.CompanyId == ActiveTenantId));
     }
 }

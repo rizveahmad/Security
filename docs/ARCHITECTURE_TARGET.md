@@ -52,6 +52,36 @@ EF Core query filters ensure rows from other tenants are never returned. All `Db
 
 Authorization is policy-based. `DynamicPermissionHandler` resolves the required `PermissionType` for each policy at runtime via `IPermissionService`. The permission graph (User → RoleGroup → Roles → PermissionTypes) is cached in-memory (`IMemoryCache`) and invalidated when roles or assignments change. `SuperAdmin` users skip the handler entirely.
 
+### Cache keys
+
+`IPermissionCache` (Application layer) / `InMemoryPermissionCache` (Infrastructure layer) keys entries as:
+
+```
+perm:{tenantId}:{userId}
+```
+
+Where `tenantId` is the active tenant identifier (resolved by `ITenantContext`) or `"null"` for SuperAdmin / no-tenant contexts. Entries expire after **15 minutes** (absolute expiry) or sooner if explicitly invalidated.
+
+### Invalidation triggers
+
+| Event | Invalidation scope | Method called |
+|-------|--------------------|---------------|
+| Role updated (`UpdateRoleCommand`) | All users in affected tenant | `InvalidateTenant(companyId)` |
+| Role deleted (`DeleteRoleCommand`) | All users in affected tenant | `InvalidateTenant(companyId)` |
+| RoleGroup updated (`UpdateRoleGroupCommand`) | All users in affected tenant | `InvalidateTenant(companyId)` |
+| RoleGroup deleted (`DeleteRoleGroupCommand`) | All users in affected tenant | `InvalidateTenant(companyId)` |
+| User role-group assignment (`AssignRoleGroupCommand`) | The specific user only | `InvalidateUser(tenantId, userId)` |
+
+Tenant-level invalidation is implemented via a `CancellationTokenSource` per tenant: cancelling the token causes `IMemoryCache` to evict all entries registered with that token without affecting other tenants' entries.
+
+### Cache usage
+
+| Component | Layer | How it uses the cache |
+|-----------|-------|-----------------------|
+| `PermissionService.GetUserPermissionsAsync` | Infrastructure | Cache-aside: returns cached set on hit; queries DB and writes to cache on miss |
+| `DynamicPermissionHandler` | Infrastructure | Calls `PermissionService.HasPermissionAsync`, which uses the cache indirectly |
+| `GetUserMenuTreeQuery` | Application | Calls `IPermissionService.GetUserPermissionsAsync`; shares the same cached result as auth checks |
+
 ## External API Authentication (Token-Based)
 
 External applications (integrations, mobile clients, scripts) authenticate via `POST /api/auth/token`, which issues a short-lived JWT bearer token. API controllers decorated with `[Authorize(AuthenticationSchemes = "Bearer")]` accept only bearer tokens; standard browser controllers continue to use cookie auth.
